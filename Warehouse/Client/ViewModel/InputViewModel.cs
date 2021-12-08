@@ -4,7 +4,7 @@ namespace Warehouse.Client.ViewModel
 {
     public class InputViewModel
     {
-        public string Id { get; set; }
+        public string ID { get; set; }
 
         [Required(ErrorMessage = "⚠️ Campo requerido")]
         public string InputTypeId { get; set; }

@@ -82,8 +82,8 @@ else
 
     private void OpenDialogUpdate(string id)
     {
-        var parameters = new DialogParameters {{"Id", id}};
-        _dialogService.Show<UpdateInputType>("Actualizar", parameters);
+        var parameters = new DialogParameters {{"InputId", id}};
+        _dialogService.Show<UpdateInput>("Actualizar", parameters);
     }
 
 }
