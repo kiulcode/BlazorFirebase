@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Linq;
 using Warehouse.Server.Services;
+using Warehouse.Shared.Models;
 
 namespace Warehouse.Server
 {
@@ -29,6 +30,7 @@ namespace Warehouse.Server
             // Custom services
             services.AddSingleton<InputTypeService>();
             services.AddSingleton<InputService>();
+            services.AddSingleton<RawMaterialService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
