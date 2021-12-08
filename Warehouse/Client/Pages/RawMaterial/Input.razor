@@ -1,0 +1,89 @@
+﻿@page "/materia-prima/tipo"
+@using Warehouse.Shared.Models
+@using Warehouse.Client.Components.RawMaterial
+@using Warehouse.Shared.Reference
+@inject HttpClient _httpClient
+@inject IDialogService _dialogService
+
+<MudButton @onclick="OpenDialogAdd" Variant="Variant.Filled" Color="Color.Primary" Class="mb-4">
+    Agregar
+</MudButton>
+@if (_inputs == null)
+{
+    <LoadContent></LoadContent>
+}
+else
+{
+    <MudTable Items="_inputs" Hover="true" Breakpoint="Breakpoint.Sm">
+        <HeaderContent>
+            <MudTh>ID</MudTh>
+            <MudTh>Nombre</MudTh>
+            <MudTh>Tipo</MudTh>
+            <MudTh>UnidadMedida</MudTh>
+            <MudTh>Acciones</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="ID">@context.Id</MudTd>
+            <MudTd DataLabel="Nombre">@context.Name</MudTd>
+            <MudTd DataLabel="Tipo">@context.InputType.Name</MudTd>
+            <MudTd DataLabel="Unidad de medida">@context.UnitMeasure</MudTd>
+            <MudTd DataLabel="Acciones">
+                <MudIconButton OnClick="@(() => OpenDialogDelete(context.Id, context.Name))"
+                               Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                               Color="Color.Error"/>
+                <MudIconButton OnClick="@(() => OpenDialogUpdate(context.Id))"
+                               Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                               Color="Color.Warning"/>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+
+@code {
+    private IReadOnlyList<InputReference> _inputs;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetAllInputs();
+    }
+
+    private async Task GetAllInputs()
+    {
+        _inputs = await _httpClient.GetFromJsonAsync<IReadOnlyList<InputReference>>("api/Input");
+        if (_inputs != null)
+        {
+            foreach (var input in _inputs)
+            {
+                input.InputType = await GetInputTypeById(input.InputTypeId);
+            }    
+        }        
+    }
+
+    private async Task<InputTypeModel> GetInputTypeById(string inputTypeId)
+    {
+        return await _httpClient.GetFromJsonAsync<InputTypeModel>($"api/InputType/{inputTypeId}");
+    }
+
+    private void OpenDialogAdd()
+    {
+        _dialogService.Show<AddInput>("Agregar");
+    }
+
+    private void OpenDialogDelete(string id, string name)
+    {
+        var parameters = new DialogParameters
+        {
+            {"Id", id},
+            {"Name", name}
+        };
+        _dialogService.Show<DeleteInput>("Eliminar", parameters);
+    }
+
+    private void OpenDialogUpdate(string id)
+    {
+        var parameters = new DialogParameters {{"Id", id}};
+        _dialogService.Show<UpdateInputType>("Actualizar", parameters);
+    }
+
+}

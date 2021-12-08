@@ -1,0 +1,31 @@
+﻿@inject HttpClient _httpClient
+@inject ISnackbar _snackbar
+
+<MudDialog>
+    <DialogContent>
+        ¿Esta seguro de eliminar @Name?
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">No</MudButton>
+        <MudButton Color="Color.Error" OnClick="Delete">Si</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter] 
+    MudDialogInstance MudDialog { get; set; }
+    
+    [Parameter]
+    public string Id { get; set; }
+    
+    [Parameter]
+    public string Name { get; set; }
+
+    void Cancel() => MudDialog.Cancel();
+
+    private async Task Delete()
+    {
+        await _httpClient.DeleteAsync($"api/Input/{Id}");
+        MudDialog.Close(DialogResult.Ok(true));
+        _snackbar.Add($"{Name} Eliminado exitosamente", Severity.Success);
+    }
+}

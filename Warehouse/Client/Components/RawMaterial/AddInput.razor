@@ -1,0 +1,72 @@
+﻿@using Warehouse.Client.ViewModel
+@using Warehouse.Shared.Models
+@inject HttpClient _httpClient
+@inject ISnackbar _snackbar
+
+<EditForm Model="_input" OnValidSubmit="Create">
+    <DataAnnotationsValidator/>
+    <MudDialog>
+        <DialogContent>
+            <MudItem Class="mb-4">
+                <MudSelect T="string" Label="Tipo" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter"
+                           @bind-Value="_input.InputTypeId" For="@(() => _input.InputTypeId)">
+                    @if (_inputTypes != null)
+                    {
+                        @foreach (var inputType in _inputTypes)
+                        {
+                            <MudSelectItem Value="@(inputType.Id)">@inputType.Name</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem Class="mb-4">
+                <MudTextField Label="Nombre" HelperText="Max. 30 caracteres" Variant="Variant.Outlined"
+                              @bind-Value="_input.Name" For="@(() => _input.Name)"/>
+            </MudItem>
+            <MudItem>
+                <MudSelect T="string" Label="Unidad de medida" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" 
+                           @bind-Value="_input.UnitMeasure" For="@(() => _input.UnitMeasure)">
+                    <MudSelectItem Value="@("kg")">Kilogramo</MudSelectItem>
+                    <MudSelectItem Value="@("hg")">Hectogramo</MudSelectItem>
+                    <MudSelectItem Value="@("dag")">Decagramo</MudSelectItem>
+                    <MudSelectItem Value="@("g")">Gramo</MudSelectItem>
+                    <MudSelectItem Value="@("dg")">Decigramo</MudSelectItem>
+                    <MudSelectItem Value="@("cg")">Centigramo</MudSelectItem>
+                    <MudSelectItem Value="@("mg")">Miligramo</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="Cancel" ButtonType="ButtonType.Button">Cancelar</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">Guardar</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    private readonly InputViewModel _input = new();
+    private IReadOnlyList<InputTypeModel> _inputTypes;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetAllInputsTypes();
+    }
+
+    private async Task GetAllInputsTypes()
+    {
+        _inputTypes = await _httpClient.GetFromJsonAsync<IReadOnlyList<InputTypeModel>>("api/inputType");
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Create()
+    {
+        await _httpClient.PostAsJsonAsync("api/Input", _input);
+        MudDialog.Close(DialogResult.Ok(true));
+        _snackbar.Add("Tipo de insumo creado exitosamente", Severity.Success);
+    }
+
+}

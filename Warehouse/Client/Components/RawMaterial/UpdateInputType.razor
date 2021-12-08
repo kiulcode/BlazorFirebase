@@ -1,0 +1,50 @@
+﻿@using Warehouse.Client.ViewModel
+@using Warehouse.Shared.Models
+@inject HttpClient _httpClient
+@inject ISnackbar _snackbar
+
+<EditForm Model="_inputType" OnValidSubmit="Update">
+    <DataAnnotationsValidator/>
+    <MudDialog>
+        <DialogContent>
+            <MudTextField Label="Nombre" HelperText="Max. 30 caracteres" Variant="Variant.Outlined"
+                          @bind-Value="_inputType.Name" For="@(() => _inputType.Name)"/>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="Cancel" ButtonType="ButtonType.Button">Cancelar</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Warning">Actualizar</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code {
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public string Id { get; set; }
+
+    private InputTypeViewModel _inputType = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _inputType = await _httpClient.GetFromJsonAsync<InputTypeViewModel>($"api/InputType/{Id}");
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Update()
+    {
+        var inputType = new InputTypeModel
+        {
+            Id = Id,
+            Name = _inputType.Name
+        };
+
+        await _httpClient.PutAsJsonAsync("api/InputType", inputType);
+        MudDialog.Close(DialogResult.Ok(true));
+        _snackbar.Add("😉 Actualizado exitosamente", Severity.Success);
+    }
+
+}
