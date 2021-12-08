@@ -15,4 +15,15 @@
     <ProjectReference Include="..\Shared\Warehouse.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Pages\Applications\Chat\Chat.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Applications\Chat\ChatChannels.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Applications\Chat\ChatUsers.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Applications\Chat\User.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Applications\Chat\UserMessage.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Applications\Email\Email.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Applications\Email\EmailNavList.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Applications\Email\Inbox.razor" />
+  </ItemGroup>
+
 </Project>
