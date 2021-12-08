@@ -1,6 +1,94 @@
 ﻿@page "/materia-prima/principal"
-<h3>RawMaterial</h3>
+@using Warehouse.Shared.Reference
+@using Warehouse.Shared.Models
+@using Warehouse.Client.Components.RawMaterial
+@inject HttpClient _httpClient
+@inject IDialogService _dialogService
+
+<MudButton @onclick="OpenDialogAdd" Variant="Variant.Filled" Color="Color.Primary" Class="mb-4">
+    Agregar
+</MudButton>
+@if (_rawMaterials == null)
+{
+    <LoadContent></LoadContent>
+}
+else
+{
+    <MudTable Items="_rawMaterials" Hover="true" Breakpoint="Breakpoint.Sm">
+        <HeaderContent>
+            <MudTh>ID</MudTh>
+            <MudTh>Insumo</MudTh>
+            <MudTh>Cantidad Entrante</MudTh>
+            <MudTh>Cantidad Saliente</MudTh>
+            <MudTh>Residuales</MudTh>
+            <MudTh>Reutilizables</MudTh>
+            <MudTh>Fecha de creación</MudTh>
+            <MudTh>Acciones</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="ID">@context.Id</MudTd>
+            <MudTd DataLabel="Insumo">@context.Input.Name - @context.Input.UnitMeasure</MudTd>
+            <MudTd DataLabel="Cant. Entrante">@context.IncomingQuantity</MudTd>
+            <MudTd DataLabel="Cant. Saliente">@context.OutgoingQuantity</MudTd>
+            <MudTd DataLabel="Residuales">@context.Waste</MudTd>
+            <MudTd DataLabel="Reutilizables">@context.Reusable</MudTd>
+            <MudTd DataLabel="Creación">@context.CreateTime</MudTd>
+            <MudTd DataLabel="Acciones">
+                <MudIconButton OnClick="@(() => OpenDialogDelete(context.Id))"
+                               Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                               Color="Color.Error"/>
+                <MudIconButton OnClick="@(() => OpenDialogUpdate(context.Id))"
+                               Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                               Color="Color.Warning"/>
+                <MudIconButton OnClick="@(() => OpenDialogUpdate(context.Id))"
+                                               Icon="@Icons.Material.Filled.Send" Size="Size.Small"
+                                               Color="Color.Info"/>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
 
 @code {
-    
+    private IReadOnlyList<RawMaterialReference> _rawMaterials;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetAllRawMaterials();
+    }
+
+    private async Task GetAllRawMaterials()
+    {
+        _rawMaterials = await _httpClient.GetFromJsonAsync<IReadOnlyList<RawMaterialReference>>("api/RawMaterial");
+        if (_rawMaterials != null)
+        {
+            foreach (var rawMaterial in _rawMaterials)
+            {
+                rawMaterial.Input = await GetInputById(rawMaterial.InputId);
+            }    
+        }        
+    }
+
+    private async Task<InputModel> GetInputById(string inputId)
+    {
+        return await _httpClient.GetFromJsonAsync<InputModel>($"api/Input/{inputId}");
+    }
+
+    private void OpenDialogAdd()
+    {
+        _dialogService.Show<AddRawMaterial>("Agregar");
+    }
+
+    private void OpenDialogDelete(string id)
+    {
+        var parameters = new DialogParameters{{"RawMaterialId", id}};
+        _dialogService.Show<DeleteRawMaterial>("Eliminar", parameters);
+    }
+
+    private void OpenDialogUpdate(string id)
+    {
+        var parameters = new DialogParameters {{"RawMaterialId", id}};
+        _dialogService.Show<UpdateRawMaterial>("Actualizar", parameters);
+    }
+
 }

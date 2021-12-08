@@ -1,0 +1,83 @@
+﻿@using Warehouse.Client.ViewModel
+@using Warehouse.Shared.Models
+@inject HttpClient _httpClient
+@inject ISnackbar _snackbar
+
+<EditForm Model="_rawMaterial" OnValidSubmit="Create">
+    <DataAnnotationsValidator/>
+    <MudDialog>
+        <DialogContent>
+            <MudItem Class="mb-4">
+                <MudSelect T="string" Label="Insumo" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter"
+                           @bind-Value="_rawMaterial.InputId" For="@(() => _rawMaterial.InputId)">
+                    @if (_inputs != null)
+                    {
+                        @foreach (var input in _inputs)
+                        {
+                            <MudSelectItem Value="@(input.Id)">@input.Name - @input.UnitMeasure</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem Class="mb-4">
+                <MudNumericField Label="Cantidad Entrante" Variant="Variant.Outlined"
+                                 @bind-Value="_rawMaterial.IncomingQuantity" For="@(() => _rawMaterial.IncomingQuantity)"/>
+            </MudItem>
+            <MudItem Class="mb-4">
+                <MudNumericField Label="Cantidad Saliente" Variant="Variant.Outlined"
+                                 @bind-Value="_rawMaterial.OutgoingQuantity" For="@(() => _rawMaterial.OutgoingQuantity)"/>
+            </MudItem>
+            <MudItem Class="mb-4">
+                <MudNumericField Label="Residuales" Variant="Variant.Outlined"
+                                 @bind-Value="_rawMaterial.Waste" For="@(() => _rawMaterial.Waste)"/>
+            </MudItem>
+            <MudItem Class="mb-4">
+                <MudNumericField Label="Reutilizables" Variant="Variant.Outlined"
+                                 @bind-Value="_rawMaterial.Reusable" For="@(() => _rawMaterial.Reusable)"/>
+            </MudItem>
+            <MudItem>
+                <MudDatePicker PickerVariant="PickerVariant.Dialog"
+                               Label="Fecha" Variant="Variant.Outlined" DateFormat="dd/MM/yyyy"
+                               @bind-Date="_rawMaterial.CreateTimeDate"/>
+            </MudItem>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="Cancel" ButtonType="ButtonType.Button">Cancelar</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">Guardar</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code {
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    private readonly RawMaterialViewModel _rawMaterial = new();
+    private IReadOnlyList<InputModel> _inputs;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetAllInputs();
+    }
+
+    private async Task GetAllInputs()
+    {
+        _inputs = await _httpClient.GetFromJsonAsync<IReadOnlyList<InputModel>>("api/input");
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Create()
+    {
+        if (_rawMaterial.CreateTimeDate != null)
+        {
+            var dateValue = _rawMaterial.CreateTimeDate.Value;
+            _rawMaterial.CreateTime = dateValue.ToString("dd/MM/yyyy");
+        }
+        await _httpClient.PostAsJsonAsync("api/RawMaterial", _rawMaterial);
+        MudDialog.Close(DialogResult.Ok(true));
+        _snackbar.Add("Tipo de insumo creado exitosamente", Severity.Success);
+    }
+
+}
