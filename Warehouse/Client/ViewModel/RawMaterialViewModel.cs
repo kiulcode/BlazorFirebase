@@ -18,7 +18,7 @@ namespace Warehouse.Client.ViewModel
         public int OutgoingQuantity { get; set; }
 
         [Required(ErrorMessage = "⚠️ Campo requerido")]
-        public int Waste { get; set; }
+        public int Residuals { get; set; }
 
         [Required(ErrorMessage = "⚠️ Campo requerido")]
         public int Reusable { get; set; }

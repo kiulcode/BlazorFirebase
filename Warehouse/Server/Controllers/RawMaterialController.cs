@@ -50,7 +50,7 @@ namespace Warehouse.Server.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetInputById(string id)
+        public async Task<IActionResult> GetRawMaterialById(string id)
         {
             var rawMaterial = await _rawMaterialService.GetRawMaterialById(id);
 
