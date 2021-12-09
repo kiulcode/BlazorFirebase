@@ -77,7 +77,9 @@ namespace Warehouse.Server.Services
                 var allProductions = await collection.GetSnapshotAsync();
 
                 return allProductions.Documents.Select(
-                    document => document.ConvertTo<ProductionModel>()).ToList();
+                    document => document.ConvertTo<ProductionModel>())
+                    .OrderByDescending(production => production.CreateTime)
+                    .ToList();
             }
             catch (Exception e)
             {

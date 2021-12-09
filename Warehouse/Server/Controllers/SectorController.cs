@@ -24,5 +24,15 @@ namespace Warehouse.Server.Controllers
                 ? Ok(sectors)
                 : NotFound("There are no documents");
         }
+        
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetSectorById(string id)
+        {
+            var sector = await _sectorService.GetSectorById(id);
+
+            return sector != null
+                ? Ok(sector)
+                : NotFound("There are no document");
+        }
     }
 }

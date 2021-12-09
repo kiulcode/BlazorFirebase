@@ -2,6 +2,7 @@
 @using Warehouse.Shared.Reference
 @using Warehouse.Shared.Models
 @using Warehouse.Client.Components.RawMaterial
+@using Warehouse.Client.Components.Production
 @inject HttpClient _httpClient
 @inject IDialogService _dialogService
 
@@ -32,7 +33,7 @@ else
             <MudTd DataLabel="Cant. Saliente">@context.OutgoingQuantity</MudTd>
             <MudTd DataLabel="Residuales">@context.Residuals</MudTd>
             <MudTd DataLabel="Reutilizables">@context.Reusable</MudTd>
-            <MudTd DataLabel="Creación">@context.CreateTime</MudTd>
+            <MudTd DataLabel="Creación">@context.Create</MudTd>
             <MudTd DataLabel="Acciones">
                 <MudIconButton OnClick="@(() => OpenDialogDelete(context.Id))"
                                Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
@@ -40,7 +41,7 @@ else
                 <MudIconButton OnClick="@(() => OpenDialogUpdate(context.Id))"
                                Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
                                Color="Color.Warning"/>
-                <MudIconButton OnClick="@(() => OpenDialogUpdate(context.Id))"
+                <MudIconButton OnClick="@(() => OpenDialogAddProduction(context.Id))"
                                                Icon="@Icons.Material.Filled.Send" Size="Size.Small"
                                                Color="Color.Info"/>
             </MudTd>
@@ -91,4 +92,9 @@ else
         _dialogService.Show<UpdateRawMaterial>("Actualizar", parameters);
     }
 
+    private void OpenDialogAddProduction(string id)
+    {
+        var parameters = new DialogParameters{{"RawMaterialId", id}};
+        _dialogService.Show<AddProduction>("Agregar", parameters);
+    }
 }

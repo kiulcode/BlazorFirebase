@@ -27,6 +27,9 @@ namespace Warehouse.Shared.Models
         public int Reusable { get; set; }
 
         [FirestoreProperty]
-        public string CreateTime { get; set; }
+        public string Create { get; set; }
+        
+        [FirestoreDocumentCreateTimestamp]
+        public DateTime CreateTime { get; set; }
     }
 }

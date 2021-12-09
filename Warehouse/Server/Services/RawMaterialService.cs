@@ -77,7 +77,9 @@ namespace Warehouse.Server.Services
                 var allRawMaterials = await collection.GetSnapshotAsync();
 
                 return allRawMaterials.Documents.Select(
-                    document => document.ConvertTo<RawMaterialModel>()).ToList();
+                    document => document.ConvertTo<RawMaterialModel>())
+                    .OrderByDescending(rawMaterial => rawMaterial.CreateTime)
+                    .ToList();
             }
             catch (Exception e)
             {

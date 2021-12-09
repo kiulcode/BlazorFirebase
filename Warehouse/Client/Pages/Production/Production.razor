@@ -1,0 +1,107 @@
+﻿@page "/produccion/principal"
+@using Warehouse.Shared.Reference
+@using Warehouse.Shared.Models
+@using Warehouse.Client.Components.RawMaterial
+@using Warehouse.Client.Components.Production
+@inject HttpClient _httpClient
+@inject IDialogService _dialogService
+
+<MudButton @onclick="OpenDialogAdd" Variant="Variant.Filled" Color="Color.Primary" Class="mb-4">
+    Agregar
+</MudButton>
+@if (_productions == null)
+{
+    <LoadContent></LoadContent>
+}
+else
+{
+    <MudTable Items="_productions" Hover="true" Breakpoint="Breakpoint.Sm">
+        <HeaderContent>
+            <MudTh>ID</MudTh>
+            <MudTh>ID Materia Prima</MudTh>
+            <MudTh>Sector</MudTh>
+            <MudTh>Conserva</MudTh>
+            <MudTh>Estado</MudTh>
+            <MudTh>Producto Estimado</MudTh>
+            <MudTh>Fecha de creación</MudTh>
+            <MudTh>Acciones</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="ID">@context.Id</MudTd>
+            <MudTd DataLabel="ID Mat. Prima">@context.RawMaterialId</MudTd>
+            <MudTd DataLabel="Sector">@context.Sector.Name</MudTd>
+            <MudTd DataLabel="Conserva">@context.PreserveType.Name</MudTd>
+            <MudTd DataLabel="Estado">@context.State</MudTd>
+            <MudTd DataLabel="Prod. Estimado">@context.EstimatedProduct</MudTd>
+            <MudTd DataLabel="Creación">@context.Create</MudTd>
+            <MudTd DataLabel="Acciones">
+                <MudIconButton OnClick="@(() => OpenDialogDelete(context.Id))"
+                               Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                               Color="Color.Error"/>
+                <MudIconButton OnClick="@(() => OpenDialogUpdate(context.Id))"
+                               Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                               Color="Color.Warning"/>
+                <MudIconButton OnClick="@(() => OpenDialogUpdate(context.Id))"
+                                               Icon="@Icons.Material.Filled.Send" Size="Size.Small"
+                                               Color="Color.Info"/>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+
+@code {
+    private IReadOnlyList<ProductionReference> _productions;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetAllProductions();
+    }
+
+    private async Task GetAllProductions()
+    {
+        _productions = await _httpClient.GetFromJsonAsync<IReadOnlyList<ProductionReference>>("api/production");
+        if (_productions != null)
+        {
+            foreach (var production in _productions)
+            {
+                production.RawMaterial = await GetRawMaterialById(production.RawMaterialId);
+                production.Sector = await GetSectorById(production.SectorId);
+                production.PreserveType = await GetPreserveTypeById(production.PreserveTypeId);
+            }    
+        }        
+    }
+
+    private async Task<RawMaterialModel> GetRawMaterialById(string id)
+    {
+        return await _httpClient.GetFromJsonAsync<RawMaterialModel>($"api/rawMaterial/{id}");
+    }
+
+    private async Task<SectorModel> GetSectorById(string id)
+    {
+        return await _httpClient.GetFromJsonAsync<SectorModel>($"api/sector/{id}");
+    }
+    
+    private async Task<PreserveTypeModel> GetPreserveTypeById(string id)
+    {
+        return await _httpClient.GetFromJsonAsync<PreserveTypeModel>($"api/preserveType/{id}");
+    }
+    
+    private void OpenDialogAdd()
+    {
+        _dialogService.Show<AddProduction>("Agregar");
+    }
+
+    private void OpenDialogDelete(string id)
+    {
+        var parameters = new DialogParameters{{"ProductionId", id}};
+        _dialogService.Show<DeleteProduction>("Eliminar", parameters);
+    }
+
+    private void OpenDialogUpdate(string id)
+    {
+        var parameters = new DialogParameters {{"ProductionId", id}};
+        _dialogService.Show<UpdateProduction>("Actualizar", parameters);
+    }
+
+}

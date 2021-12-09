@@ -36,5 +36,21 @@ namespace Warehouse.Server.Services
                 throw;
             }
         }
+        
+        public async Task<SectorModel> GetSectorById(string id)
+        {
+            try
+            {
+                var collection = _firestoreDb.Collection(CollectionName);
+                var sector = await collection.Document(id).GetSnapshotAsync();
+
+                return sector.ConvertTo<SectorModel>();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+        }
     }
 }

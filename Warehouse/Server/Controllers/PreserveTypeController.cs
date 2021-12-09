@@ -24,5 +24,15 @@ namespace Warehouse.Server.Controllers
                 ? Ok(preservesTypes)
                 : NotFound("There are no documents");
         }
+        
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetPreserveTypeById(string id)
+        {
+            var preserveType = await _preserveTypeService.GetPreserveTypeById(id);
+
+            return preserveType != null
+                ? Ok(preserveType)
+                : NotFound("There are no document");
+        }
     }
 }

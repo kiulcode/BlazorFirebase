@@ -36,5 +36,21 @@ namespace Warehouse.Server.Services
                 throw;
             }
         }
+        
+        public async Task<PreserveTypeModel> GetPreserveTypeById(string id)
+        {
+            try
+            {
+                var collection = _firestoreDb.Collection(CollectionName);
+                var preserveType = await collection.Document(id).GetSnapshotAsync();
+
+                return preserveType.ConvertTo<PreserveTypeModel>();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+        }
     }
 }

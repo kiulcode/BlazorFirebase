@@ -1,0 +1,142 @@
+﻿@using Warehouse.Client.ViewModel
+@using Warehouse.Shared.Models
+@using Google.Cloud.Firestore
+@inject HttpClient _httpClient
+@inject ISnackbar _snackbar
+
+<EditForm Model="_production" OnValidSubmit="Create">
+    <DataAnnotationsValidator/>
+    <MudDialog>
+        <DialogContent>
+            <MudItem Class="mb-4">
+
+                @if (string.IsNullOrEmpty(RawMaterialId))
+                {
+                    <MudSelect T="string" Label="Materia Prima" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter"
+                               @bind-Value="_production.RawMaterialId" For="@(() => _production.RawMaterialId)">
+                        @if (_rawMaterials != null)
+                        {
+                            @foreach (var rawMaterial in _rawMaterials)
+                            {
+                                <MudSelectItem Value="@(rawMaterial.Id)">@rawMaterial.Id</MudSelectItem>
+                            }
+                        }
+                    </MudSelect>
+                }
+                else
+                {
+                    <MudTextField Label="Materia Prima" Disabled="true" Variant="Variant.Outlined"
+                                  @bind-Value="_production.RawMaterialId" For="@(() => _production.RawMaterialId)"/>
+                }
+            </MudItem>
+
+            <MudItem Class="mb-4">
+                <MudSelect T="string" Label="Sector" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter"
+                           @bind-Value="_production.SectorId" For="@(() => _production.SectorId)">
+                    @if (_sectors != null)
+                    {
+                        @foreach (var sector in _sectors)
+                        {
+                            <MudSelectItem Value="@(sector.Id)">@sector.Name</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+
+            <MudItem Class="mb-4">
+                <MudSelect T="string" Label="Tipo de conserva" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter"
+                           @bind-Value="_production.PreserveTypeId" For="@(() => _production.PreserveTypeId)">
+                    @if (_preservesTypes != null)
+                    {
+                        @foreach (var preserveType in _preservesTypes)
+                        {
+                            <MudSelectItem Value="@(preserveType.Id)">@preserveType.Name</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+
+            <MudItem Class="mb-4">
+                <MudNumericField Label="Producto Estimado" Variant="Variant.Outlined"
+                                 @bind-Value="_production.EstimatedProduct" For="@(() => _production.EstimatedProduct)"/>
+            </MudItem>
+
+            <MudItem>
+                <MudDatePicker PickerVariant="PickerVariant.Dialog"
+                               Label="Fecha" Variant="Variant.Outlined" DateFormat="dd/MM/yyyy"
+                               @bind-Date="_production.CreateDate"/>
+            </MudItem>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="Cancel" ButtonType="ButtonType.Button">Cancelar</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">Guardar</MudButton>
+        </DialogActions>
+    </MudDialog>
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
+    }
+</EditForm>
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public string RawMaterialId { get; set; }
+
+    private readonly ProductionViewModel _production = new();
+    private IReadOnlyList<RawMaterialModel> _rawMaterials;
+    private IReadOnlyList<SectorModel> _sectors;
+    private IReadOnlyList<PreserveTypeModel> _preservesTypes;
+    private bool _isLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrEmpty(RawMaterialId))
+        {
+            await GetAllRawMaterials();
+        }
+        else
+        {
+            _production.RawMaterialId = RawMaterialId;
+        }
+        
+        await GetAllSectors();
+        await GetAllPreservesTypes();
+    }
+
+    private async Task GetAllRawMaterials()
+    {
+        _rawMaterials = await _httpClient.GetFromJsonAsync<IReadOnlyList<RawMaterialModel>>("api/rawMaterial");
+    }
+
+    private async Task GetAllSectors()
+    {
+        _sectors = await _httpClient.GetFromJsonAsync<IReadOnlyList<SectorModel>>("api/sector");
+    }
+
+    private async Task GetAllPreservesTypes()
+    {
+        _preservesTypes = await _httpClient.GetFromJsonAsync<IReadOnlyList<PreserveTypeModel>>("api/preserveType");
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Create()
+    {
+        _isLoading = true;
+        if (_production.CreateDate != null)
+        {
+            var dateValue = _production.CreateDate.Value;
+            _production.Create = dateValue.ToString("dd/MM/yyyy");
+        }
+
+        await _httpClient.PostAsJsonAsync("api/production", _production);
+        
+        _isLoading = false;
+        MudDialog.Close(DialogResult.Ok(true));
+        _snackbar.Add("Producción creada exitosamente", Severity.Success);
+    }
+
+}

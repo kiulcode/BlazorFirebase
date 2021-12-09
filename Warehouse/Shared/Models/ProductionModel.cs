@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System;
+using System.Text.Json.Serialization;
 using Google.Cloud.Firestore;
 
 namespace Warehouse.Shared.Models
@@ -18,14 +19,17 @@ namespace Warehouse.Shared.Models
         
         [FirestoreProperty] 
         public string PreserveTypeId { get; set; }
-        
+
         [FirestoreProperty] 
-        public string State { get; set; } = "En proceso";
+        public string State { get; set; }
 
         [FirestoreProperty] 
         public int EstimatedProduct { get; set; }
-        
-        [FirestoreProperty] 
-        public string CreationDate { get; set; }
+
+        [FirestoreProperty]
+        public string Create { get; set; }
+
+        [FirestoreDocumentCreateTimestamp]
+        public DateTime CreateTime { get; set; }
     }
 }

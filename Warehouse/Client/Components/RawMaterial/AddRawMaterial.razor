@@ -38,7 +38,7 @@
             <MudItem>
                 <MudDatePicker PickerVariant="PickerVariant.Dialog"
                                Label="Fecha" Variant="Variant.Outlined" DateFormat="dd/MM/yyyy"
-                               @bind-Date="_rawMaterial.CreateTimeDate"/>
+                               @bind-Date="_rawMaterial.CreateDate"/>
             </MudItem>
         </DialogContent>
         <DialogActions>
@@ -70,10 +70,10 @@
 
     private async Task Create()
     {
-        if (_rawMaterial.CreateTimeDate != null)
+        if (_rawMaterial.CreateDate != null)
         {
-            var dateValue = _rawMaterial.CreateTimeDate.Value;
-            _rawMaterial.CreateTime = dateValue.ToString("dd/MM/yyyy");
+            var dateValue = _rawMaterial.CreateDate.Value;
+            _rawMaterial.Create = dateValue.ToString("dd/MM/yyyy");
         }
         await _httpClient.PostAsJsonAsync("api/RawMaterial", _rawMaterial);
         MudDialog.Close(DialogResult.Ok(true));
