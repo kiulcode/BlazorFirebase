@@ -1,6 +1,7 @@
 ﻿@using Warehouse.Client.ViewModel
 @using Warehouse.Shared.Models
 @using Google.Cloud.Firestore
+@using System.Net
 @inject HttpClient _httpClient
 @inject ISnackbar _snackbar
 
@@ -67,9 +68,13 @@
         </DialogContent>
         <DialogActions>
             <MudButton OnClick="Cancel" ButtonType="ButtonType.Button">Cancelar</MudButton>
-            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Warning">Guardar</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Warning">Actualizar</MudButton>
         </DialogActions>
     </MudDialog>
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
+    }
 </EditForm>
 
 @code {
@@ -78,12 +83,16 @@
     MudDialogInstance MudDialog { get; set; }
 
     [Parameter]
+    public TaskResult TaskResult { get; set; }
+
+    [Parameter]
     public string ProductionId { get; set; }
 
     private ProductionViewModel _production = new();
     private IReadOnlyList<RawMaterialModel> _rawMaterials;
     private IReadOnlyList<SectorModel> _sectors;
     private IReadOnlyList<PreserveTypeModel> _preservesTypes;
+    private bool _isLoading;
 
     protected override async Task OnInitializedAsync()
     {
@@ -119,14 +128,26 @@
 
     private async Task Update()
     {
+        _isLoading = true;
         if (_production.CreateDate != null)
         {
             var dateValue = _production.CreateDate.Value;
             _production.Create = dateValue.ToString("dd/MM/yyyy");
         }
 
-        await _httpClient.PutAsJsonAsync("api/production", _production);
-        MudDialog.Close(DialogResult.Ok(true));
-        _snackbar.Add("Producción actualizada exitosamente", Severity.Success);
+        var httpResponse = await _httpClient.PutAsJsonAsync("api/production", _production);
+
+        if (httpResponse.StatusCode == HttpStatusCode.OK)
+        {
+            TaskResult.Result = true;
+            MudDialog.Close(DialogResult.Ok(TaskResult));
+            _snackbar.Add("Producción actualizada exitosamente", Severity.Success);
+        }
+        else
+        {
+            _snackbar.Add("Ocurrió un error al actualizar la producción", Severity.Error);
+        }
+        _isLoading = false;
     }
+
 }

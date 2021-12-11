@@ -1,10 +1,12 @@
 ﻿@page "/produccion/principal"
 @using Warehouse.Shared.Reference
 @using Warehouse.Shared.Models
-@using Warehouse.Client.Components.RawMaterial
 @using Warehouse.Client.Components.Production
+@using Warehouse.Client.ViewModel
+@using System.Net
 @inject HttpClient _httpClient
 @inject IDialogService _dialogService
+@inject ISnackbar _snackbar
 
 <MudButton @onclick="OpenDialogAdd" Variant="Variant.Filled" Color="Color.Primary" Class="mb-4">
     Agregar
@@ -15,7 +17,8 @@
 }
 else
 {
-    <MudTable Items="_productions" Hover="true" Breakpoint="Breakpoint.Sm">
+    <MudTable Items="_productions" Hover="true" Breakpoint="Breakpoint.Sm" 
+              Loading="@_isLoading" LoadingProgressColor="Color.Primary">
         <HeaderContent>
             <MudTh>ID</MudTh>
             <MudTh>ID Materia Prima</MudTh>
@@ -52,6 +55,7 @@ else
 
 @code {
     private IReadOnlyList<ProductionReference> _productions;
+    private bool _isLoading;
 
     protected override async Task OnInitializedAsync()
     {
@@ -87,21 +91,67 @@ else
         return await _httpClient.GetFromJsonAsync<PreserveTypeModel>($"api/preserveType/{id}");
     }
     
-    private void OpenDialogAdd()
+    private async Task OpenDialogAdd()
     {
-        _dialogService.Show<AddProduction>("Agregar");
+        _isLoading = true;
+        var parameters = new DialogParameters
+        {
+            { "TaskResult", new TaskResult()}
+        };
+        var dialogResult = await _dialogService.Show<AddProduction>("Agregar", parameters).Result;
+        if (dialogResult.Data != null)
+        {
+            var newResult = (TaskResult) dialogResult.Data;
+            if (newResult.Result)
+            {
+                await GetAllProductions();
+            }
+        }
+        _isLoading = false;
     }
 
-    private void OpenDialogDelete(string id)
+    private async Task OpenDialogUpdate(string id)
     {
-        var parameters = new DialogParameters{{"ProductionId", id}};
-        _dialogService.Show<DeleteProduction>("Eliminar", parameters);
+        _isLoading = true;
+        var parameters = new DialogParameters
+        {
+            { "TaskResult", new TaskResult()},
+            {"ProductionId", id}
+        };
+        var dialogResult = await _dialogService.Show<UpdateProduction>("Actualizar", parameters).Result;
+        if (dialogResult.Data != null)
+        {
+            var newResult = (TaskResult) dialogResult.Data;
+            if (newResult.Result)
+            {
+                await GetAllProductions();
+            }
+        }
+        _isLoading = false;
     }
-
-    private void OpenDialogUpdate(string id)
+    
+    private async Task OpenDialogDelete(string id)
     {
-        var parameters = new DialogParameters {{"ProductionId", id}};
-        _dialogService.Show<UpdateProduction>("Actualizar", parameters);
-    }
+        _isLoading = true;
+        var resultDialog = await _dialogService.ShowMessageBox(
+            "Eliminar", 
+            $"¿Está seguro de eliminar {id}?",
+            "Si", "No");
 
+        if (resultDialog is true)
+        {
+            var httpResponse = await _httpClient.DeleteAsync($"api/Production/{id}");
+
+            if (httpResponse.StatusCode == HttpStatusCode.OK)
+            {
+                await GetAllProductions();
+                _snackbar.Add($"{id} Eliminado exitosamente", Severity.Success);
+            }
+            else
+            {
+                _snackbar.Add($"Error al eliminar {id}", Severity.Error);
+            }
+        }
+        _isLoading = false;
+    }
 }

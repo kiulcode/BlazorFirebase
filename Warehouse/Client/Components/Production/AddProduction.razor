@@ -1,6 +1,7 @@
 ﻿@using Warehouse.Client.ViewModel
 @using Warehouse.Shared.Models
 @using Google.Cloud.Firestore
+@using System.Net
 @inject HttpClient _httpClient
 @inject ISnackbar _snackbar
 
@@ -83,6 +84,9 @@
     MudDialogInstance MudDialog { get; set; }
 
     [Parameter]
+    public TaskResult TaskResult { get; set; }
+    
+    [Parameter]
     public string RawMaterialId { get; set; }
 
     private readonly ProductionViewModel _production = new();
@@ -132,11 +136,18 @@
             _production.Create = dateValue.ToString("dd/MM/yyyy");
         }
 
-        await _httpClient.PostAsJsonAsync("api/production", _production);
-        
+        var httpResponse = await _httpClient.PostAsJsonAsync("api/production", _production);
+        if (httpResponse.StatusCode == HttpStatusCode.OK)
+        {
+            TaskResult.Result = true;
+            MudDialog.Close(DialogResult.Ok(TaskResult));
+            _snackbar.Add("Producción creada exitosamente", Severity.Success);
+        }
+        else
+        {
+            _snackbar.Add("Error al crear la producción", Severity.Error);
+        }
         _isLoading = false;
-        MudDialog.Close(DialogResult.Ok(true));
-        _snackbar.Add("Producción creada exitosamente", Severity.Success);
     }
 
 }
