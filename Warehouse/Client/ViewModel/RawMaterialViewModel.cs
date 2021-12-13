@@ -17,12 +17,6 @@ namespace Warehouse.Client.ViewModel
         [Required(ErrorMessage = "⚠️ Campo requerido")]
         public int OutgoingQuantity { get; set; }
 
-        [Required(ErrorMessage = "⚠️ Campo requerido")]
-        public int Residuals { get; set; }
-
-        [Required(ErrorMessage = "⚠️ Campo requerido")]
-        public int Reusable { get; set; }
-
         public string Create { get; set; }
         
         public DateTime? CreateDate { get; set; } = DateTime.Today;

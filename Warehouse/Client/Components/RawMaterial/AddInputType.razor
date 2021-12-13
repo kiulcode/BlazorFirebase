@@ -1,5 +1,4 @@
-﻿@using Warehouse.Client.ViewModel
-@inject HttpClient _httpClient
+﻿@inject HttpClient _httpClient
 @inject ISnackbar _snackbar
 
 <EditForm Model="_inputType" OnValidSubmit="Create">
@@ -16,21 +15,42 @@
             <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">Guardar</MudButton>
         </DialogActions>
     </MudDialog>
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
+    }
 </EditForm>
 
 @code {
+
     [CascadingParameter]
     MudDialogInstance MudDialog { get; set; }
 
+    [Parameter]
+    public TaskResult TaskResult { get; set; }
+
     private readonly InputTypeViewModel _inputType = new();
+    private bool _isLoading;
 
     private void Cancel() => MudDialog.Cancel();
 
     private async Task Create()
     {
-        await _httpClient.PostAsJsonAsync("api/InputType", _inputType);
-        MudDialog.Close(DialogResult.Ok(true));
-        _snackbar.Add("Tipo de insumo creado exitosamente", Severity.Success);
+        _isLoading = true;
+
+        var httpResponse = await _httpClient.PostAsJsonAsync("api/InputType", _inputType);
+        if (httpResponse.StatusCode == HttpStatusCode.OK)
+        {
+            TaskResult.Result = true;
+            MudDialog.Close(DialogResult.Ok(TaskResult));
+            _snackbar.Add("😉 Tipo de insumo creado exitosamente", Severity.Success);
+        }
+        else
+        {
+            _snackbar.Add("😥 Error al crear el tipo de insumo", Severity.Error);
+        }
+
+        _isLoading = false;
     }
 
 }

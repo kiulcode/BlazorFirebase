@@ -1,6 +1,4 @@
-﻿@using Warehouse.Client.ViewModel
-@using Warehouse.Shared.Models
-@inject HttpClient _httpClient
+﻿@inject HttpClient _httpClient
 @inject ISnackbar _snackbar
 
 <EditForm Model="_inputType" OnValidSubmit="Update">
@@ -15,6 +13,10 @@
             <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Warning">Actualizar</MudButton>
         </DialogActions>
     </MudDialog>
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
+    }
 </EditForm>
 
 @code {
@@ -23,9 +25,13 @@
     MudDialogInstance MudDialog { get; set; }
 
     [Parameter]
+    public TaskResult TaskResult { get; set; }
+
+    [Parameter]
     public string Id { get; set; }
 
     private InputTypeViewModel _inputType = new();
+    private bool _isLoading;
 
     protected override async Task OnInitializedAsync()
     {
@@ -36,15 +42,21 @@
 
     private async Task Update()
     {
-        var inputType = new InputTypeModel
+        _isLoading = true;
+        
+        var httpResponse = await _httpClient.PutAsJsonAsync("api/InputType", _inputType);
+        if (httpResponse.StatusCode == HttpStatusCode.OK)
         {
-            Id = Id,
-            Name = _inputType.Name
-        };
-
-        await _httpClient.PutAsJsonAsync("api/InputType", inputType);
-        MudDialog.Close(DialogResult.Ok(true));
-        _snackbar.Add("😉 Actualizado exitosamente", Severity.Success);
+            TaskResult.Result = true;
+            MudDialog.Close(DialogResult.Ok(TaskResult));
+            _snackbar.Add("😉 Tipo de insumo actualizado", Severity.Success);
+        }
+        else
+        {
+            _snackbar.Add("😔 No se pudo actualizar el tipo de insumo", Severity.Error);
+        }
+        
+        _isLoading = false;
     }
 
 }

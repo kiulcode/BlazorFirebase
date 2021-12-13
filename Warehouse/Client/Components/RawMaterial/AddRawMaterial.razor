@@ -1,5 +1,4 @@
-﻿@using Warehouse.Client.ViewModel
-@using Warehouse.Shared.Models
+﻿@using Warehouse.Shared.Models
 @inject HttpClient _httpClient
 @inject ISnackbar _snackbar
 
@@ -23,18 +22,6 @@
                 <MudNumericField Label="Cantidad Entrante" Variant="Variant.Outlined"
                                  @bind-Value="_rawMaterial.IncomingQuantity" For="@(() => _rawMaterial.IncomingQuantity)"/>
             </MudItem>
-            <MudItem Class="mb-4">
-                <MudNumericField Label="Cantidad Saliente" Variant="Variant.Outlined"
-                                 @bind-Value="_rawMaterial.OutgoingQuantity" For="@(() => _rawMaterial.OutgoingQuantity)"/>
-            </MudItem>
-            <MudItem Class="mb-4">
-                <MudNumericField Label="Residuales" Variant="Variant.Outlined"
-                                 @bind-Value="_rawMaterial.Residuals" For="@(() => _rawMaterial.Residuals)"/>
-            </MudItem>
-            <MudItem Class="mb-4">
-                <MudNumericField Label="Reutilizables" Variant="Variant.Outlined"
-                                 @bind-Value="_rawMaterial.Reusable" For="@(() => _rawMaterial.Reusable)"/>
-            </MudItem>
             <MudItem>
                 <MudDatePicker PickerVariant="PickerVariant.Dialog"
                                Label="Fecha" Variant="Variant.Outlined" DateFormat="dd/MM/yyyy"
@@ -46,6 +33,10 @@
             <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">Guardar</MudButton>
         </DialogActions>
     </MudDialog>
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
+    }
 </EditForm>
 
 @code {
@@ -53,8 +44,12 @@
     [CascadingParameter]
     MudDialogInstance MudDialog { get; set; }
 
+    [Parameter]
+    public TaskResult TaskResult { get; set; }
+
     private readonly RawMaterialViewModel _rawMaterial = new();
     private IReadOnlyList<InputModel> _inputs;
+    private bool _isLoading;
 
     protected override async Task OnInitializedAsync()
     {
@@ -70,14 +65,27 @@
 
     private async Task Create()
     {
+        _isLoading = true;
         if (_rawMaterial.CreateDate != null)
         {
             var dateValue = _rawMaterial.CreateDate.Value;
             _rawMaterial.Create = dateValue.ToString("dd/MM/yyyy");
         }
-        await _httpClient.PostAsJsonAsync("api/RawMaterial", _rawMaterial);
-        MudDialog.Close(DialogResult.Ok(true));
-        _snackbar.Add("Tipo de insumo creado exitosamente", Severity.Success);
+        
+        var httpResponse = await _httpClient.PostAsJsonAsync("api/RawMaterial", _rawMaterial);
+
+        if (httpResponse.StatusCode == HttpStatusCode.OK)
+        {
+            TaskResult.Result = true;
+            MudDialog.Close(DialogResult.Ok(TaskResult));
+            _snackbar.Add("😉 Materia prima creada exitosamente", Severity.Success);
+        }
+        else
+        {
+            _snackbar.Add("😔 Ocurrió un error al crear la materia prima", Severity.Error);
+        }
+        
+        _isLoading = false;
     }
 
 }

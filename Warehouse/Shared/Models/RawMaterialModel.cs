@@ -21,12 +21,6 @@ namespace Warehouse.Shared.Models
         public int OutgoingQuantity { get; set; }
 
         [FirestoreProperty]
-        public int Residuals { get; set; }
-
-        [FirestoreProperty]
-        public int Reusable { get; set; }
-
-        [FirestoreProperty]
         public string Create { get; set; }
         
         [FirestoreDocumentCreateTimestamp]

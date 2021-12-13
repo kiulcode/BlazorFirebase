@@ -1,5 +1,4 @@
-﻿@using Warehouse.Client.ViewModel
-@using Warehouse.Shared.Models
+﻿@using Warehouse.Shared.Models
 @inject HttpClient _httpClient
 @inject ISnackbar _snackbar
 
@@ -49,6 +48,10 @@
             <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Warning">Actualizar</MudButton>
         </DialogActions>
     </MudDialog>
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
+    }
 </EditForm>
 
 @code {
@@ -57,10 +60,14 @@
     MudDialogInstance MudDialog { get; set; }
 
     [Parameter]
+    public TaskResult TaskResult { get; set; }
+
+    [Parameter]
     public string InputId { get; set; }
 
     private InputViewModel _input = new();
     private IReadOnlyList<InputTypeModel> _inputTypes;
+    private bool _isLoading;
 
     protected override async Task OnInitializedAsync()
     {
@@ -82,9 +89,22 @@
 
     private async Task Update()
     {
-        await _httpClient.PutAsJsonAsync("api/Input", _input);
-        MudDialog.Close(DialogResult.Ok(true));
-        _snackbar.Add("Insumo actualizado exitosamente", Severity.Success);
+        _isLoading = true;
+
+        var httpResponse = await _httpClient.PutAsJsonAsync("api/Input", _input);
+
+        if (httpResponse.StatusCode == HttpStatusCode.OK)
+        {
+            TaskResult.Result = true;
+            MudDialog.Close(DialogResult.Ok(TaskResult));
+            _snackbar.Add("😉 Insumo actualizado", Severity.Success);
+        }
+        else
+        {
+            _snackbar.Add("😔 Ocurrió un error al actualizar el insumo", Severity.Error);
+        }
+
+        _isLoading = false;
     }
 
 }

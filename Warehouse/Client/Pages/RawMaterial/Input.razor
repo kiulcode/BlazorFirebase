@@ -14,7 +14,8 @@
 }
 else
 {
-    <MudTable Items="_inputs" Hover="true" Breakpoint="Breakpoint.Sm">
+    <MudTable Items="_inputs" Hover="true" Breakpoint="Breakpoint.Sm"
+              Loading="@_isLoading" LoadingProgressColor="Color.Primary">
         <HeaderContent>
             <MudTh>ID</MudTh>
             <MudTh>Nombre</MudTh>
@@ -42,6 +43,7 @@ else
 
 @code {
     private IReadOnlyList<InputReference> _inputs;
+    private bool _isLoading;
 
     protected override async Task OnInitializedAsync()
     {
@@ -65,25 +67,69 @@ else
         return await _httpClient.GetFromJsonAsync<InputTypeModel>($"api/InputType/{inputTypeId}");
     }
 
-    private void OpenDialogAdd()
+    private async Task OpenDialogAdd()
     {
-        _dialogService.Show<AddInput>("Agregar");
-    }
-
-    private void OpenDialogDelete(string id, string name)
-    {
+        _isLoading = true;
+        
         var parameters = new DialogParameters
         {
+            {"TaskResult", new TaskResult()}
+        };
+        var dialogResult = await _dialogService.Show<AddInput>("Agregar", parameters).Result;
+        if (dialogResult.Data != null)
+        {
+            var newResult = (TaskResult) dialogResult.Data;
+            if (newResult.Result)
+            {
+                await GetAllInputs();
+            }
+        }
+        
+        _isLoading = false;
+    }
+
+    private async Task OpenDialogUpdate(string id)
+    {
+        _isLoading = true;
+        
+        var parameters = new DialogParameters
+        {
+            {"TaskResult", new TaskResult()},
+            {"InputId", id}
+        };
+        var dialogResult = await _dialogService.Show<UpdateInput>("Actualizar", parameters).Result;
+        if (dialogResult.Data != null)
+        {
+            var newResult = (TaskResult) dialogResult.Data;
+            if (newResult.Result)
+            {
+                await GetAllInputs();
+            }
+        }
+        
+        _isLoading = false;
+    }
+
+    private async Task OpenDialogDelete(string id, string name)
+    {
+        _isLoading = true;
+        
+        var parameters = new DialogParameters
+        {
+            {"TaskResult", new TaskResult()},
             {"Id", id},
             {"Name", name}
         };
-        _dialogService.Show<DeleteInput>("Eliminar", parameters);
+        var dialogResult = await _dialogService.Show<DeleteInput>("Eliminar", parameters).Result;
+        if (dialogResult.Data != null)
+        {
+            var newResult = (TaskResult) dialogResult.Data;
+            if (newResult.Result)
+            {
+                await GetAllInputs();
+            }
+        }
+        
+        _isLoading = false;
     }
-
-    private void OpenDialogUpdate(string id)
-    {
-        var parameters = new DialogParameters {{"InputId", id}};
-        _dialogService.Show<UpdateInput>("Actualizar", parameters);
-    }
-
 }

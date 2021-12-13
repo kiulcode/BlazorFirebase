@@ -10,19 +10,44 @@
         <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="Delete">Si</MudButton>
     </DialogActions>
 </MudDialog>
+
+@if (_isLoading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
+}
+
 @code {
-    [CascadingParameter] 
+
+    [CascadingParameter]
     MudDialogInstance MudDialog { get; set; }
-    
+
+    [Parameter]
+    public TaskResult TaskResult { get; set; }
+
     [Parameter]
     public string RawMaterialId { get; set; }
+
+    private bool _isLoading;
 
     void Cancel() => MudDialog.Cancel();
 
     private async Task Delete()
     {
-        await _httpClient.DeleteAsync($"api/RawMaterial/{RawMaterialId}");
-        MudDialog.Close(DialogResult.Ok(true));
-        _snackbar.Add($"{RawMaterialId} Eliminado exitosamente", Severity.Success);
+        _isLoading = true;
+
+        var httpResponse = await _httpClient.DeleteAsync($"api/RawMaterial/{RawMaterialId}");
+        if (httpResponse.StatusCode == HttpStatusCode.OK)
+        {
+            TaskResult.Result = true;
+            MudDialog.Close(DialogResult.Ok(TaskResult));
+            _snackbar.Add($"😉 {RawMaterialId} eliminado exitosamente", Severity.Success);
+        }
+        else
+        {
+            _snackbar.Add($"😔 {RawMaterialId} no se pudo eliminar", Severity.Error);
+        }
+        
+        _isLoading = false;
     }
+
 }

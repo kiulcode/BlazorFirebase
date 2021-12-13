@@ -2,8 +2,6 @@
 @using Warehouse.Shared.Reference
 @using Warehouse.Shared.Models
 @using Warehouse.Client.Components.Production
-@using Warehouse.Client.ViewModel
-@using System.Net
 @inject HttpClient _httpClient
 @inject IDialogService _dialogService
 @inject ISnackbar _snackbar
@@ -115,7 +113,7 @@ else
         _isLoading = true;
         var parameters = new DialogParameters
         {
-            { "TaskResult", new TaskResult()},
+            {"TaskResult", new TaskResult()},
             {"ProductionId", id}
         };
         var dialogResult = await _dialogService.Show<UpdateProduction>("Actualizar", parameters).Result;

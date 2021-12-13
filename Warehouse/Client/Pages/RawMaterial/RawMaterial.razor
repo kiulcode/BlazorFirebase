@@ -15,14 +15,13 @@
 }
 else
 {
-    <MudTable Items="_rawMaterials" Hover="true" Breakpoint="Breakpoint.Sm">
+    <MudTable Items="_rawMaterials" Hover="true" Breakpoint="Breakpoint.Sm"
+              Loading="@_isLoading" LoadingProgressColor="Color.Primary">
         <HeaderContent>
             <MudTh>ID</MudTh>
             <MudTh>Insumo</MudTh>
             <MudTh>Cantidad Entrante</MudTh>
             <MudTh>Cantidad Saliente</MudTh>
-            <MudTh>Residuales</MudTh>
-            <MudTh>Reutilizables</MudTh>
             <MudTh>Fecha de creación</MudTh>
             <MudTh>Acciones</MudTh>
         </HeaderContent>
@@ -31,8 +30,6 @@ else
             <MudTd DataLabel="Insumo">@context.Input.Name - @context.Input.UnitMeasure</MudTd>
             <MudTd DataLabel="Cant. Entrante">@context.IncomingQuantity</MudTd>
             <MudTd DataLabel="Cant. Saliente">@context.OutgoingQuantity</MudTd>
-            <MudTd DataLabel="Residuales">@context.Residuals</MudTd>
-            <MudTd DataLabel="Reutilizables">@context.Reusable</MudTd>
             <MudTd DataLabel="Creación">@context.Create</MudTd>
             <MudTd DataLabel="Acciones">
                 <MudIconButton OnClick="@(() => OpenDialogDelete(context.Id))"
@@ -42,16 +39,16 @@ else
                                Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
                                Color="Color.Warning"/>
                 <MudIconButton OnClick="@(() => OpenDialogAddProduction(context.Id))"
-                                               Icon="@Icons.Material.Filled.Send" Size="Size.Small"
-                                               Color="Color.Info"/>
+                               Icon="@Icons.Material.Filled.Send" Size="Size.Small"
+                               Color="Color.Info"/>
             </MudTd>
         </RowTemplate>
     </MudTable>
 }
 
-
 @code {
     private IReadOnlyList<RawMaterialReference> _rawMaterials;
+    private bool _isLoading;
 
     protected override async Task OnInitializedAsync()
     {
@@ -66,8 +63,8 @@ else
             foreach (var rawMaterial in _rawMaterials)
             {
                 rawMaterial.Input = await GetInputById(rawMaterial.InputId);
-            }    
-        }        
+            }
+        }
     }
 
     private async Task<InputModel> GetInputById(string inputId)
@@ -75,26 +72,75 @@ else
         return await _httpClient.GetFromJsonAsync<InputModel>($"api/Input/{inputId}");
     }
 
-    private void OpenDialogAdd()
+    private async Task OpenDialogAdd()
     {
-        _dialogService.Show<AddRawMaterial>("Agregar");
+        _isLoading = true;
+
+        var parameters = new DialogParameters
+        {
+            {"TaskResult", new TaskResult()}
+        };
+        var dialogResult = await _dialogService.Show<AddRawMaterial>("Agregar", parameters).Result;
+        if (dialogResult.Data != null)
+        {
+            var newResult = (TaskResult) dialogResult.Data;
+            if (newResult.Result)
+            {
+                await GetAllRawMaterials();
+            }
+        }
+
+        _isLoading = false;
     }
 
-    private void OpenDialogDelete(string id)
+    private async Task OpenDialogUpdate(string id)
     {
-        var parameters = new DialogParameters{{"RawMaterialId", id}};
-        _dialogService.Show<DeleteRawMaterial>("Eliminar", parameters);
+        _isLoading = true;
+
+        var parameters = new DialogParameters
+        {
+            {"TaskResult", new TaskResult()},
+            {"RawMaterialId", id}
+        };
+        var dialogResult = await _dialogService.Show<UpdateRawMaterial>("Actualizar", parameters).Result;
+        if (dialogResult.Data != null)
+        {
+            var newResult = (TaskResult) dialogResult.Data;
+            if (newResult.Result)
+            {
+                await GetAllRawMaterials();
+            }
+        }
+
+        _isLoading = false;
     }
 
-    private void OpenDialogUpdate(string id)
+    private async Task OpenDialogDelete(string id)
     {
-        var parameters = new DialogParameters {{"RawMaterialId", id}};
-        _dialogService.Show<UpdateRawMaterial>("Actualizar", parameters);
+        _isLoading = true;
+
+        var parameters = new DialogParameters
+        {
+            {"TaskResult", new TaskResult()},
+            {"RawMaterialId", id}
+        };
+        var dialogResult = await _dialogService.Show<DeleteRawMaterial>("Eliminar", parameters).Result;
+        if (dialogResult.Data != null)
+        {
+            var newResult = (TaskResult) dialogResult.Data;
+            if (newResult.Result)
+            {
+                await GetAllRawMaterials();
+            }
+        }
+
+        _isLoading = false;
     }
 
     private void OpenDialogAddProduction(string id)
     {
-        var parameters = new DialogParameters{{"RawMaterialId", id}};
+        var parameters = new DialogParameters {{"RawMaterialId", id}};
         _dialogService.Show<AddProduction>("Agregar", parameters);
     }
+
 }
