@@ -12,7 +12,7 @@ namespace Warehouse.Shared.Models
         public string Id { get; set; }
         
         [FirestoreProperty] 
-        public string RawMaterialId { get; set; }
+        public string Name { get; set; }
         
         [FirestoreProperty] 
         public string SectorId { get; set; }

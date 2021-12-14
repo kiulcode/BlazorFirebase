@@ -19,7 +19,7 @@ else
               Loading="@_isLoading" LoadingProgressColor="Color.Primary">
         <HeaderContent>
             <MudTh>ID</MudTh>
-            <MudTh>ID Materia Prima</MudTh>
+            <MudTh>Nombre</MudTh>
             <MudTh>Sector</MudTh>
             <MudTh>Conserva</MudTh>
             <MudTh>Estado</MudTh>
@@ -29,27 +29,23 @@ else
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="ID">@context.Id</MudTd>
-            <MudTd DataLabel="ID Mat. Prima">@context.RawMaterialId</MudTd>
+            <MudTd DataLabel="Nombre">@context.Name</MudTd>
             <MudTd DataLabel="Sector">@context.Sector.Name</MudTd>
             <MudTd DataLabel="Conserva">@context.PreserveType.Name</MudTd>
             <MudTd DataLabel="Estado">@context.State</MudTd>
             <MudTd DataLabel="Prod. Estimado">@context.EstimatedProduct</MudTd>
             <MudTd DataLabel="Creación">@context.Create</MudTd>
             <MudTd DataLabel="Acciones">
-                <MudIconButton OnClick="@(() => OpenDialogDelete(context.Id))"
+                <MudIconButton OnClick="@(() => OpenDialogDelete(context.Id, context.Name))"
                                Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
                                Color="Color.Error"/>
                 <MudIconButton OnClick="@(() => OpenDialogUpdate(context.Id))"
                                Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
                                Color="Color.Warning"/>
-                <MudIconButton OnClick="@(() => OpenDialogUpdate(context.Id))"
-                                               Icon="@Icons.Material.Filled.Send" Size="Size.Small"
-                                               Color="Color.Info"/>
             </MudTd>
         </RowTemplate>
     </MudTable>
 }
-
 
 @code {
     private IReadOnlyList<ProductionReference> _productions;
@@ -67,16 +63,10 @@ else
         {
             foreach (var production in _productions)
             {
-                production.RawMaterial = await GetRawMaterialById(production.RawMaterialId);
                 production.Sector = await GetSectorById(production.SectorId);
                 production.PreserveType = await GetPreserveTypeById(production.PreserveTypeId);
             }    
         }        
-    }
-
-    private async Task<RawMaterialModel> GetRawMaterialById(string id)
-    {
-        return await _httpClient.GetFromJsonAsync<RawMaterialModel>($"api/rawMaterial/{id}");
     }
 
     private async Task<SectorModel> GetSectorById(string id)
@@ -92,6 +82,7 @@ else
     private async Task OpenDialogAdd()
     {
         _isLoading = true;
+        
         var parameters = new DialogParameters
         {
             { "TaskResult", new TaskResult()}
@@ -105,12 +96,14 @@ else
                 await GetAllProductions();
             }
         }
+        
         _isLoading = false;
     }
 
     private async Task OpenDialogUpdate(string id)
     {
         _isLoading = true;
+        
         var parameters = new DialogParameters
         {
             {"TaskResult", new TaskResult()},
@@ -125,31 +118,30 @@ else
                 await GetAllProductions();
             }
         }
+        
         _isLoading = false;
     }
     
-    private async Task OpenDialogDelete(string id)
+    private async Task OpenDialogDelete(string id, string name)
     {
         _isLoading = true;
-        var resultDialog = await _dialogService.ShowMessageBox(
-            "Eliminar", 
-            $"¿Está seguro de eliminar {id}?",
-            "Si", "No");
 
-        if (resultDialog is true)
+        var parameters = new DialogParameters
         {
-            var httpResponse = await _httpClient.DeleteAsync($"api/Production/{id}");
-
-            if (httpResponse.StatusCode == HttpStatusCode.OK)
+            {"TaskResult", new TaskResult()},
+            {"ProductionId", id},
+            {"Name", name}
+        };
+        var dialogResult = await _dialogService.Show<DeleteProduction>("Eliminar", parameters).Result;
+        if (dialogResult.Data != null)
+        {
+            var newResult = (TaskResult) dialogResult.Data;
+            if (newResult.Result)
             {
                 await GetAllProductions();
-                _snackbar.Add($"{id} Eliminado exitosamente", Severity.Success);
-            }
-            else
-            {
-                _snackbar.Add($"Error al eliminar {id}", Severity.Error);
             }
         }
+        
         _isLoading = false;
     }
 }

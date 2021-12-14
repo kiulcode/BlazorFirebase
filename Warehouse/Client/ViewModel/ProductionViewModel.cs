@@ -9,8 +9,8 @@ namespace Warehouse.Client.ViewModel
         public string ID { get; set; }
         
         [Required(ErrorMessage = "⚠️ Campo requerido")]
-        public string RawMaterialId { get; set; }
-        
+        public string Name { get; set; } = "PRO-0000000000";
+
         [Required(ErrorMessage = "⚠️ Campo requerido")]
         public string SectorId { get; set; }
         

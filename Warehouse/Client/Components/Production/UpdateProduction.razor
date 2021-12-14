@@ -1,7 +1,4 @@
-﻿@using Warehouse.Client.ViewModel
-@using Warehouse.Shared.Models
-@using Google.Cloud.Firestore
-@using System.Net
+﻿@using Warehouse.Shared.Models
 @inject HttpClient _httpClient
 @inject ISnackbar _snackbar
 
@@ -9,23 +6,15 @@
     <DataAnnotationsValidator/>
     <MudDialog>
         <DialogContent>
-            @if (_production == null || _rawMaterials == null || _sectors == null || _preservesTypes == null)
+            @if (_production == null || _sectors == null || _preservesTypes == null)
             {
                 <LoadUpdate></LoadUpdate>
             }
             else
             {
                 <MudItem Class="mb-4">
-                    <MudSelect T="string" Label="Materia Prima" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter"
-                               @bind-Value="_production.RawMaterialId" For="@(() => _production.RawMaterialId)">
-                        @if (_rawMaterials != null)
-                        {
-                            @foreach (var rawMaterial in _rawMaterials)
-                            {
-                                <MudSelectItem Value="@(rawMaterial.Id)">@rawMaterial.Id</MudSelectItem>
-                            }
-                        }
-                    </MudSelect>
+                    <MudTextField Label="Nombre" Variant="Variant.Outlined"
+                                  @bind-Value="_production.Name" For="@(() => _production.Name)"/>
                 </MudItem>
 
                 <MudItem Class="mb-4">
@@ -89,7 +78,6 @@
     public string ProductionId { get; set; }
 
     private ProductionViewModel _production = new();
-    private IReadOnlyList<RawMaterialModel> _rawMaterials;
     private IReadOnlyList<SectorModel> _sectors;
     private IReadOnlyList<PreserveTypeModel> _preservesTypes;
     private bool _isLoading;
@@ -97,7 +85,6 @@
     protected override async Task OnInitializedAsync()
     {
         await GetProductionById();
-        await GetAllRawMaterials();
         await GetAllSectors();
         await GetAllPreservesTypes();
     }
@@ -107,11 +94,6 @@
         _production = await _httpClient.GetFromJsonAsync<ProductionViewModel>($"api/production/{ProductionId}");
         if (_production != null)
             _production.CreateDate = DateTime.Parse(_production.Create);
-    }
-
-    private async Task GetAllRawMaterials()
-    {
-        _rawMaterials = await _httpClient.GetFromJsonAsync<IReadOnlyList<RawMaterialModel>>("api/rawMaterial");
     }
 
     private async Task GetAllSectors()
@@ -129,6 +111,7 @@
     private async Task Update()
     {
         _isLoading = true;
+        
         if (_production.CreateDate != null)
         {
             var dateValue = _production.CreateDate.Value;
@@ -141,12 +124,13 @@
         {
             TaskResult.Result = true;
             MudDialog.Close(DialogResult.Ok(TaskResult));
-            _snackbar.Add("Producción actualizada exitosamente", Severity.Success);
+            _snackbar.Add("😉 Producción actualizada exitosamente", Severity.Success);
         }
         else
         {
-            _snackbar.Add("Ocurrió un error al actualizar la producción", Severity.Error);
+            _snackbar.Add("😥 Ocurrió un error al actualizar", Severity.Error);
         }
+        
         _isLoading = false;
     }
 
