@@ -4,32 +4,31 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Google.Cloud.Firestore;
-using Microsoft.AspNetCore.Mvc;
 using Warehouse.Shared.Models;
 
 namespace Warehouse.Server.Services
 {
-    public class SectorService
+    public class WarehouseService
     {
         private readonly FirestoreDb _firestoreDb;
-        private const string CollectionName = "Sectors";
+        private const string CollectionName = "Warehouse";
 
-        public SectorService()
+        public WarehouseService()
         {
             var filePath = Directory.GetCurrentDirectory() + @"\FirestoreApiKey\adminsdk-d709d-63d215d12a.json";
             Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", filePath);
             _firestoreDb = FirestoreDb.Create("anchobetaswarehouse");
         }
         
-        public async Task<SectorModel> CreateSector([FromBody] SectorModel sector)
+        public async Task<WarehouseModel> CreateWarehouse(WarehouseModel warehouse)
         {
             try
             {
                 var collection = _firestoreDb.Collection(CollectionName);
-                var documentReference = await collection.AddAsync(sector);
+                var documentReference = await collection.AddAsync(warehouse);
                 var document = await documentReference.GetSnapshotAsync();
 
-                return document.ConvertTo<SectorModel>();
+                return document.ConvertTo<WarehouseModel>();
             }
             catch (Exception e)
             {
@@ -38,14 +37,14 @@ namespace Warehouse.Server.Services
             }
         }
         
-        public async Task UpdateSector([FromBody] SectorModel sector)
+        public async Task UpdateWarehouse(WarehouseModel warehouse)
         {
             try
             {
                 var documentReference = _firestoreDb
                     .Collection(CollectionName)
-                    .Document(sector.Id);
-                await documentReference.SetAsync(sector);
+                    .Document(warehouse.Id);
+                await documentReference.SetAsync(warehouse);
             }
             catch (Exception e)
             {
@@ -54,7 +53,7 @@ namespace Warehouse.Server.Services
             }
         }
         
-        public async Task DeleteSector(string id)
+        public async Task DeleteWarehouse(string id)
         {
             try
             {
@@ -70,15 +69,17 @@ namespace Warehouse.Server.Services
             }
         }
         
-        public async Task<IReadOnlyList<SectorModel>> GetAllSectors()
+        public async Task<IReadOnlyList<WarehouseModel>> GetAllWarehouse()
         {
             try
             {
                 var collection = _firestoreDb.Collection(CollectionName);
-                var allSectors = await collection.GetSnapshotAsync();
+                var allWarehouse = await collection.GetSnapshotAsync();
 
-                return allSectors.Documents.Select(
-                    document => document.ConvertTo<SectorModel>()).ToList();
+                return allWarehouse.Documents.Select(
+                    document => document.ConvertTo<WarehouseModel>())
+                    .OrderByDescending(warehouse => warehouse.CreateTime)
+                    .ToList();
             }
             catch (Exception e)
             {
@@ -87,14 +88,14 @@ namespace Warehouse.Server.Services
             }
         }
         
-        public async Task<SectorModel> GetSectorById(string id)
+        public async Task<WarehouseModel> GetWarehouseById(string id)
         {
             try
             {
                 var collection = _firestoreDb.Collection(CollectionName);
-                var sector = await collection.Document(id).GetSnapshotAsync();
+                var warehouse = await collection.Document(id).GetSnapshotAsync();
 
-                return sector.ConvertTo<SectorModel>();
+                return warehouse.ConvertTo<WarehouseModel>();
             }
             catch (Exception e)
             {

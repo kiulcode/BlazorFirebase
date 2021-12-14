@@ -9,27 +9,27 @@ using Warehouse.Shared.Models;
 
 namespace Warehouse.Server.Services
 {
-    public class SectorService
+    public class ProductService
     {
         private readonly FirestoreDb _firestoreDb;
-        private const string CollectionName = "Sectors";
+        private const string CollectionName = "Products";
 
-        public SectorService()
+        public ProductService()
         {
             var filePath = Directory.GetCurrentDirectory() + @"\FirestoreApiKey\adminsdk-d709d-63d215d12a.json";
             Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", filePath);
             _firestoreDb = FirestoreDb.Create("anchobetaswarehouse");
         }
         
-        public async Task<SectorModel> CreateSector([FromBody] SectorModel sector)
+        public async Task<ProductModel> CreateProduct([FromBody] ProductModel product)
         {
             try
             {
                 var collection = _firestoreDb.Collection(CollectionName);
-                var documentReference = await collection.AddAsync(sector);
+                var documentReference = await collection.AddAsync(product);
                 var document = await documentReference.GetSnapshotAsync();
 
-                return document.ConvertTo<SectorModel>();
+                return document.ConvertTo<ProductModel>();
             }
             catch (Exception e)
             {
@@ -38,14 +38,14 @@ namespace Warehouse.Server.Services
             }
         }
         
-        public async Task UpdateSector([FromBody] SectorModel sector)
+        public async Task UpdateProduct([FromBody] ProductModel product)
         {
             try
             {
                 var documentReference = _firestoreDb
                     .Collection(CollectionName)
-                    .Document(sector.Id);
-                await documentReference.SetAsync(sector);
+                    .Document(product.Id);
+                await documentReference.SetAsync(product);
             }
             catch (Exception e)
             {
@@ -54,7 +54,7 @@ namespace Warehouse.Server.Services
             }
         }
         
-        public async Task DeleteSector(string id)
+        public async Task DeleteProduct(string id)
         {
             try
             {
@@ -70,15 +70,17 @@ namespace Warehouse.Server.Services
             }
         }
         
-        public async Task<IReadOnlyList<SectorModel>> GetAllSectors()
+        public async Task<IReadOnlyList<ProductModel>> GetAllProducts()
         {
             try
             {
                 var collection = _firestoreDb.Collection(CollectionName);
-                var allSectors = await collection.GetSnapshotAsync();
+                var allProducts = await collection.GetSnapshotAsync();
 
-                return allSectors.Documents.Select(
-                    document => document.ConvertTo<SectorModel>()).ToList();
+                return allProducts.Documents.Select(
+                    document => document.ConvertTo<ProductModel>())
+                    .OrderByDescending(product => product.CreateTime)
+                    .ToList();
             }
             catch (Exception e)
             {
@@ -87,14 +89,14 @@ namespace Warehouse.Server.Services
             }
         }
         
-        public async Task<SectorModel> GetSectorById(string id)
+        public async Task<ProductModel> GetProductById(string id)
         {
             try
             {
                 var collection = _firestoreDb.Collection(CollectionName);
-                var sector = await collection.Document(id).GetSnapshotAsync();
+                var product = await collection.Document(id).GetSnapshotAsync();
 
-                return sector.ConvertTo<SectorModel>();
+                return product.ConvertTo<ProductModel>();
             }
             catch (Exception e)
             {

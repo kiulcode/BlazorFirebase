@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Warehouse.Server.Services;
+using Warehouse.Shared.Models;
 
 namespace Warehouse.Server.Controllers
 {
@@ -13,6 +14,29 @@ namespace Warehouse.Server.Controllers
         public SectorController(SectorService sectorService)
         {
             _sectorService = sectorService;
+        }
+        
+        [HttpPost]
+        public async Task<IActionResult> CreateSector([FromBody] SectorModel sector)
+        {
+            var result = await _sectorService.CreateSector(sector);
+            return result != null
+                ? Ok(result)
+                : BadRequest("Error creating document");
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> UpdateSector([FromBody] SectorModel sector)
+        {
+            await _sectorService.UpdateSector(sector);
+            return Ok("Actualized document");
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteSector(string id)
+        {
+            await _sectorService.DeleteSector(id);
+            return Ok("Document deleted");
         }
         
         [HttpGet]

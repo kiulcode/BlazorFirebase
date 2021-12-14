@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Warehouse.Server.Services;
+using Warehouse.Shared.Models;
 
 namespace Warehouse.Server.Controllers
 {
@@ -13,6 +14,29 @@ namespace Warehouse.Server.Controllers
         public PreserveTypeController(PreserveTypeService preserveTypeService)
         {
             _preserveTypeService = preserveTypeService;
+        }
+        
+        [HttpPost]
+        public async Task<IActionResult> CreatePreserveType([FromBody] PreserveTypeModel preserveType)
+        {
+            var result = await _preserveTypeService.CreatePreserveType(preserveType);
+            return result != null
+                ? Ok(result)
+                : BadRequest("Error creating document");
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> UpdatePreserveType([FromBody] PreserveTypeModel preserveType)
+        {
+            await _preserveTypeService.UpdatePreserveType(preserveType);
+            return Ok("Actualized document");
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeletePreserveType(string id)
+        {
+            await _preserveTypeService.DeletePreserveType(id);
+            return Ok("Document deleted");
         }
         
         [HttpGet]
