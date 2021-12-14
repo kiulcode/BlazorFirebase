@@ -1,0 +1,138 @@
+﻿@using Warehouse.Shared.Models
+@inject HttpClient _httpClient
+@inject ISnackbar _snackbar
+
+<EditForm Model="_productionMaterial" OnValidSubmit="Create">
+    <DataAnnotationsValidator/>
+    <MudDialog>
+        <DialogContent>
+            <MudItem Class="mb-4">
+                <MudSelect T="string" Label="Producción" Variant="Variant.Outlined"
+                           @bind-Value="_productionMaterial.ProductionId" For="@(() => _productionMaterial.ProductionId)">
+                    @if (_productions != null)
+                    {
+                        @foreach (var production in _productions)
+                        {
+                            <MudSelectItem Value="@(production.Id)">@production.Name</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+
+            <MudItem Class="mb-4">
+                @if (string.IsNullOrEmpty(RawMaterialId))
+                {
+                    <MudSelect T="string" Label="ID de materia prima" Variant="Variant.Outlined"
+                               @bind-Value="_productionMaterial.RawMaterialId" For="@(() => _productionMaterial.RawMaterialId)">
+                        @if (_rawMaterials != null)
+                        {
+                            @foreach (var rawMaterial in _rawMaterials)
+                            {
+                                <MudSelectItem Value="@(rawMaterial.Id)">@rawMaterial.Id</MudSelectItem>
+                            }
+                        }
+                    </MudSelect>
+                }
+                else
+                {
+                    <MudTextField Label="Materia Prima" Disabled="true" Variant="Variant.Outlined"
+                                  @bind-Value="_productionMaterial.RawMaterialId" For="@(() => _productionMaterial.RawMaterialId)"/>
+                }
+            </MudItem>
+
+            <MudItem>
+                <MudTextField Label="Cantidad Saliente" Variant="Variant.Outlined"
+                              @bind-Value="_outgoingQuantity"/>
+            </MudItem>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="Cancel" ButtonType="ButtonType.Button">Cancelar</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">Guardar</MudButton>
+        </DialogActions>
+    </MudDialog>
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
+    }
+</EditForm>
+
+@code {
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public TaskResult TaskResult { get; set; }
+
+    [Parameter]
+    public string RawMaterialId { get; set; }
+
+    private readonly ProductionMaterialViewModel _productionMaterial = new();
+    private IReadOnlyList<ProductionModel> _productions;
+    private IReadOnlyList<RawMaterialModel> _rawMaterials;
+    private RawMaterialViewModel _rawMaterial = new();
+    private int _outgoingQuantity;
+    private bool _isLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetAllProductions();
+        if (string.IsNullOrEmpty(RawMaterialId))
+        {
+            await GetAllRawMaterials();
+        }
+        else
+        {
+            _productionMaterial.RawMaterialId = RawMaterialId;
+        }
+    }
+
+    private async Task GetAllProductions()
+    {
+        _productions = await _httpClient
+            .GetFromJsonAsync<IReadOnlyList<ProductionModel>>("api/production");
+    }
+
+    private async Task GetAllRawMaterials()
+    {
+        _rawMaterials = await _httpClient
+            .GetFromJsonAsync<IReadOnlyList<RawMaterialModel>>("api/RawMaterial");
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Create()
+    {
+        _isLoading = true;
+
+        await UpdateRawMaterial();
+        var httpResponse = await _httpClient.PostAsJsonAsync("api/productionMaterial", _productionMaterial);
+        if (httpResponse.StatusCode == HttpStatusCode.OK)
+        {
+            TaskResult.Result = true;
+            MudDialog.Close(DialogResult.Ok(TaskResult));
+            _snackbar.Add("😉 Material de producción creada exitosamente", Severity.Success);
+        }
+        else
+        {
+            _snackbar.Add("😥 Error al crear el material de producción", Severity.Error);
+        }
+
+        _isLoading = false;
+    }
+
+    private async Task UpdateRawMaterial()
+    {
+        if (_outgoingQuantity > 0)
+        {
+            _rawMaterial = await _httpClient
+                .GetFromJsonAsync<RawMaterialViewModel>($"api/rawMaterial/{_productionMaterial.RawMaterialId}");
+            if (_rawMaterial != null)
+            {
+                _rawMaterial.OutgoingQuantity = _outgoingQuantity;
+            }
+        
+            await _httpClient.PutAsJsonAsync("api/RawMaterial", _rawMaterial);
+        }
+    }
+}

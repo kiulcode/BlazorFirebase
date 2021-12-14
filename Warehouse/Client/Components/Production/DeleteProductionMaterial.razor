@@ -1,0 +1,53 @@
+﻿@inject HttpClient _httpClient
+@inject ISnackbar _snackbar
+
+<MudDialog>
+    <DialogContent>
+        ¿Esta seguro de eliminar @ProductionMaterialId?
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">No</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="Delete">Si</MudButton>
+    </DialogActions>
+</MudDialog>
+@if (_isLoading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
+}
+
+@code {
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public TaskResult TaskResult { get; set; }
+
+    [Parameter]
+    public string ProductionMaterialId { get; set; }
+    
+    private bool _isLoading;
+
+    void Cancel() => MudDialog.Cancel();
+
+    private async Task Delete()
+    {
+        _isLoading = true;
+
+        var httpResponse = await _httpClient.DeleteAsync($"api/ProductionMaterial/{ProductionMaterialId}");
+
+        if (httpResponse.StatusCode == HttpStatusCode.OK)
+        {
+            TaskResult.Result = true;
+            MudDialog.Close(DialogResult.Ok(TaskResult));
+            _snackbar.Add($"😉 {ProductionMaterialId} eliminado exitosamente", Severity.Success);
+        }
+        else
+        {
+            _snackbar.Add($"😔 Ocurrio un error al eliminar {ProductionMaterialId}", Severity.Error);
+        }
+
+        _isLoading = false;
+    }
+
+}

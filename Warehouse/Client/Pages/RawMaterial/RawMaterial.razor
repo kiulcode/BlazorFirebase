@@ -38,7 +38,7 @@ else
                 <MudIconButton OnClick="@(() => OpenDialogUpdate(context.Id))"
                                Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
                                Color="Color.Warning"/>
-                <MudIconButton OnClick="@(() => OpenDialogAddProduction(context.Id))"
+                <MudIconButton OnClick="@(() => OpenDialogAddProductionMaterial(context.Id))"
                                Icon="@Icons.Material.Filled.Send" Size="Size.Small"
                                Color="Color.Info"/>
             </MudTd>
@@ -137,10 +137,22 @@ else
         _isLoading = false;
     }
 
-    private void OpenDialogAddProduction(string id)
+    private async Task OpenDialogAddProductionMaterial(string id)
     {
-        var parameters = new DialogParameters {{"RawMaterialId", id}};
-        _dialogService.Show<AddProduction>("Agregar", parameters);
+        var parameters = new DialogParameters
+        {
+            {"TaskResult", new TaskResult()},
+            {"RawMaterialId", id}
+        };
+        var dialogResult = await _dialogService.Show<AddProductionMaterial>("Agregar", parameters).Result;
+        if (dialogResult.Data != null)
+        {
+            var newResult = (TaskResult) dialogResult.Data;
+            if (newResult.Result)
+            {
+                await GetAllRawMaterials();
+            }
+        }
     }
 
 }

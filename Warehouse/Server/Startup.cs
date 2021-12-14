@@ -30,6 +30,7 @@ namespace Warehouse.Server
             services.AddSingleton<SectorService>();
             services.AddSingleton<PreserveTypeService>();
             services.AddSingleton<ProductionService>();
+            services.AddSingleton<ProductionMaterialService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
