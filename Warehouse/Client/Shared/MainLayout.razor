@@ -1,5 +1,5 @@
 ﻿@inherits LayoutComponentBase
-
+@inject IJSRuntime _jsRuntime
 
 <MudThemeProvider Theme="_currentTheme"/>
 <MudDialogProvider/>
@@ -8,7 +8,7 @@
 <MudLayout>
     <MudAppBar Elevation="25">
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
-            <img src="images/fish-vestido.png" alt="Icono app" style="width: 50px">
+            <img src="icons/icon-128.png" alt="Icono app" style="width: 50px">
         </MudHidden>
         <MudHidden Breakpoint="Breakpoint.MdAndUp">
             <MudIconButton Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())"/>
@@ -51,10 +51,13 @@
 
 @code {
     private bool _drawerOpen = true;
+    private string _theme;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        _currentTheme = _darkTheme;
+        _theme = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "theme");
+        Console.WriteLine(_theme);
+        _currentTheme = _theme == "dark" ? _darkTheme : _defaultTheme;
         StateHasChanged();
     }
 
@@ -65,7 +68,17 @@
 
     void DarkMode()
     {
-        _currentTheme = _currentTheme == _defaultTheme ? _darkTheme : _defaultTheme;
+        if (_currentTheme == _defaultTheme)
+        {
+            _currentTheme = _darkTheme;
+            _jsRuntime.InvokeVoidAsync("localStorage.setItem", "theme", "dark");
+        }
+        else
+        {
+            _currentTheme = _defaultTheme;
+            _jsRuntime.InvokeVoidAsync("localStorage.setItem", "theme", "light");
+        }
+        //_currentTheme = _currentTheme == _defaultTheme ? _darkTheme : _defaultTheme;
     }
 
     MudTheme _currentTheme = new();

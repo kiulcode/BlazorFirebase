@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+https://go.microsoft.com/fwlink/?LinkID=208121. 
+-->
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_PublishTargetUrl>C:\Projects\.NET 5\Warehouse\Warehouse\Server\bin\Release\net5.0\publish\</_PublishTargetUrl>
+    <History>True|2021-12-15T07:36:20.7579734Z;True|2021-12-15T02:31:36.8950831-05:00;True|2021-12-15T02:21:08.3206656-05:00;</History>
+  </PropertyGroup>
+</Project>

@@ -9,18 +9,47 @@
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet"/>
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet"/>
     <link href="manifest.json" rel="manifest"/>
-    <link rel="apple-touch-icon" sizes="512x512" href="images/fish-vestido.png"/>
-    <link rel="shortcut icon" href="images/fish-vestido.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="icons/icon-512.png"/>
+    <link rel="shortcut icon" href="icons/icon-64.png">
+    <style>
+        .container-app {
+            height: 100vh;    
+         }
+        
+        .container-children {
+            display: grid;
+            place-content: center;
+            height: 100%;
+            width: 100%;
+            background: #32333D;
+        }
+    </style>
 </head>
 
 <body>
-<div id="app">Loading...</div>
+<div id="app">
+    <div class="container-app">
+        <div id="children" class="container-children">
+            <img src="images/load-home.gif" alt="Imagen de carga"/>
+        </div>
+    </div>
+</div>
 
 <div id="blazor-error-ui">
     An unhandled error has occurred.
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+
+<script>
+    const THEME = localStorage.getItem('theme');
+    const CHILDREN = document.getElementById('children');
+    if (THEME === "dark") {
+        CHILDREN.style.background = "#32333D";
+    } else {
+        CHILDREN.style.background = "#ffffff";
+    }
+</script>
 <script src="_framework/blazor.webassembly.js"></script>
 <script src="_content/MudBlazor/MudBlazor.min.js"></script>
 <script>navigator.serviceWorker.register('service-worker.js');</script>

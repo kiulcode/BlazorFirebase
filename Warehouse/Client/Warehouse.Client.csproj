@@ -30,4 +30,9 @@
     <_ContentIncludedByDefault Remove="Pages\Pages\Utility\WasmLoading.razor" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Remove="wwwroot\images\fish-vestido.png" />
+    <Content Remove="wwwroot\images\AdminDashboardTemplate.png" />
+  </ItemGroup>
+
 </Project>

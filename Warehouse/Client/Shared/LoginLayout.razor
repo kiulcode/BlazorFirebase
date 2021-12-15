@@ -1,5 +1,5 @@
 ﻿@inherits LayoutComponentBase
-
+@inject IJSRuntime _jsRuntime
 
 <MudThemeProvider Theme="_currentTheme"/>
 <MudSnackbarProvider/>
@@ -8,24 +8,23 @@
     <div class="d-flex flex-column mud-width-full">
         <MudPaper Elevation="25" Class="pa-8" Width="100%" MaxWidth="500px">
             <div class="d-flex justify-center">
-                <img src="images/fish-vestido.png" alt="Imagen de login">
+                <img src="icons/icon-128.png" alt="Imagen de login">
             </div>
+            <br>
             @Body
         </MudPaper>
     </div>
 </MudContainer>
 
 @code {
+    private string _theme;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        _currentTheme = _darkTheme;
+        _theme = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "theme");
+        Console.WriteLine(_theme);
+        _currentTheme = _theme == "dark" ? _darkTheme : _defaultTheme;
         StateHasChanged();
-    }
-
-    void DarkMode()
-    {
-        _currentTheme = _currentTheme == _defaultTheme ? _darkTheme : _defaultTheme;
     }
 
     MudTheme _currentTheme = new();
