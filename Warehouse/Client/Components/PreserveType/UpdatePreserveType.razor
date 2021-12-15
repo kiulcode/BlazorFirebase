@@ -1,0 +1,71 @@
+﻿@inject HttpClient _httpClient
+@inject ISnackbar _snackbar
+
+<EditForm Model="_preserveType" OnValidSubmit="Create">
+    <DataAnnotationsValidator/>
+    <MudDialog>
+        <DialogContent>
+            @if (_preserveType == null)
+            {
+                <LoadUpdate></LoadUpdate>
+            }
+            else
+            {
+                <MudItem>
+                    <MudTextField Label="Nombre" HelperText="Max. 30 caracteres" Variant="Variant.Outlined"
+                                  @bind-Value="_preserveType.Name" For="@(() => _preserveType.Name)"/>
+                </MudItem>
+            }
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="Cancel" ButtonType="ButtonType.Button">Cancelar</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Warning">Editar</MudButton>
+        </DialogActions>
+    </MudDialog>
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
+    }
+</EditForm>
+
+@code {
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public TaskResult TaskResult { get; set; }
+
+    [Parameter]
+    public string PreserveTypeId { get; set; }
+    
+    private PreserveTypeViewModel _preserveType = new();
+    private bool _isLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _preserveType = await _httpClient.GetFromJsonAsync<PreserveTypeViewModel>($"api/preserveType/{PreserveTypeId}");
+    }
+    
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Create()
+    {
+        _isLoading = true;
+
+        var httpResponse = await _httpClient.PutAsJsonAsync("api/preserveType", _preserveType);
+        if (httpResponse.StatusCode == HttpStatusCode.OK)
+        {
+            TaskResult.Result = true;
+            MudDialog.Close(DialogResult.Ok(TaskResult));
+            _snackbar.Add("😉 Tipo de conserva creado exitosamente", Severity.Success);
+        }
+        else
+        {
+            _snackbar.Add("😥 Error al crear tipo de conserva", Severity.Error);
+        }
+
+        _isLoading = false;
+    }
+
+}

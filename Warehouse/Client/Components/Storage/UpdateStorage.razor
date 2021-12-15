@@ -1,0 +1,99 @@
+﻿@using Warehouse.Shared.Models
+@inject HttpClient _httpClient
+@inject ISnackbar _snackbar
+
+<EditForm Model="_storage" OnValidSubmit="Update">
+    <DataAnnotationsValidator/>
+    <MudDialog>
+        <DialogContent>
+            @if (_storage == null || _products == null)
+            {
+                <LoadUpdate></LoadUpdate>
+            }
+            else
+            {
+                <MudItem Class="mb-4">
+                    <MudSelect T="string" Label="ID de Producto" Variant="Variant.Outlined"
+                               @bind-Value="_storage.ProductId" For="@(() => _storage.ProductId)">
+                        @foreach (var product in _products)
+                        {
+                            <MudSelectItem Value="@(product.Id)">@product.Id</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem Class="mb-4">
+                    <MudNumericField Label="Stock Entrante" Variant="Variant.Outlined"
+                                     @bind-Value="_storage.StockIncoming" For="@(() => _storage.StockIncoming)"/>
+                </MudItem>
+                
+                <MudItem Class="mb-4">
+                    <MudNumericField Label="Stock Saliente" Variant="Variant.Outlined"
+                                     @bind-Value="_storage.StockOutgoing" For="@(() => _storage.StockOutgoing)"/>
+                </MudItem>
+            }
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="Cancel" ButtonType="ButtonType.Button">Cancelar</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Warning">Editar</MudButton>
+        </DialogActions>
+    </MudDialog>
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
+    }
+</EditForm>
+
+@code {
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public TaskResult TaskResult { get; set; }
+
+    [Parameter]
+    public string StorageId { get; set; }
+
+    private StorageViewModel _storage = new();
+    private IReadOnlyList<ProductModel> _products;
+    private bool _isLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetStorageById();
+        await GetAllProducts();
+    }
+
+    private async Task GetStorageById()
+    {
+        _storage = await _httpClient.GetFromJsonAsync<StorageViewModel>($"api/storage/{StorageId}");
+    }
+
+    private async Task GetAllProducts()
+    {
+        _products = await _httpClient.GetFromJsonAsync<IReadOnlyList<ProductModel>>("api/product");
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Update()
+    {
+        _isLoading = true;
+
+        var httpResponse = await _httpClient.PutAsJsonAsync("api/storage", _storage);
+        if (httpResponse.StatusCode == HttpStatusCode.OK)
+        {
+            TaskResult.Result = true;
+            MudDialog.Close(DialogResult.Ok(TaskResult));
+            _snackbar.Add("😉 Actualizado exitosamente", Severity.Success);
+        }
+        else
+        {
+            _snackbar.Add("😥 Error, no se pudo actualizar", Severity.Error);
+        }
+
+        _isLoading = false;
+    }
+
+}

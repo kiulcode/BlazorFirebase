@@ -1,0 +1,120 @@
+﻿@page "/produccion/tipo-conserva"
+@using Warehouse.Shared.Models
+@using Warehouse.Client.Components.Sector
+@using Warehouse.Client.Components.PreserveType
+@inject HttpClient _httpClient
+@inject IDialogService _dialogService
+
+<MudButton @onclick="OpenDialogAdd" Variant="Variant.Filled" Color="Color.Primary" Class="mb-4">
+    Agregar
+</MudButton>
+@if (_preserveTypes == null)
+{
+    <LoadContent></LoadContent>
+}
+else
+{
+    <MudTable Items="_preserveTypes" Hover="true" Breakpoint="Breakpoint.Sm"
+              Loading="@_isLoading" LoadingProgressColor="Color.Primary">
+        <HeaderContent>
+            <MudTh>ID</MudTh>
+            <MudTh>Nombre</MudTh>
+            <MudTh>Acciones</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="ID">@context.Id</MudTd>
+            <MudTd DataLabel="Nombre">@context.Name</MudTd>
+            <MudTd DataLabel="Acciones">
+                <MudIconButton OnClick="@(() => OpenDialogDelete(context.Id, context.Name))"
+                               Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                               Color="Color.Error"/>
+                <MudIconButton OnClick="@(() => OpenDialogUpdate(context.Id))"
+                               Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                               Color="Color.Warning"/>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private IReadOnlyList<PreserveTypeModel> _preserveTypes;
+    private bool _isLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetAll();
+    }
+
+    private async Task GetAll()
+    {
+        _preserveTypes = await _httpClient.GetFromJsonAsync<IReadOnlyList<PreserveTypeModel>>("api/preserveType");
+    }
+
+    private async Task OpenDialogAdd()
+    {
+        _isLoading = true;
+
+        var parameters = new DialogParameters
+        {
+            {"TaskResult", new TaskResult()}
+        };
+        var dialogResult = await _dialogService.Show<AddPreserveType>("Agregar", parameters).Result;
+        if (dialogResult.Data != null)
+        {
+            var newResult = (TaskResult) dialogResult.Data;
+            if (newResult.Result)
+            {
+                await GetAll();
+            }
+        }
+
+        _isLoading = false;
+    }
+
+    private async Task OpenDialogUpdate(string id)
+    {
+        _isLoading = true;
+        
+        var parameters = new DialogParameters
+        {
+            {"TaskResult", new TaskResult()},
+            {"PreserveTypeId", id}
+        };
+        var dialogResult = await _dialogService.Show<UpdatePreserveType>("Actualizar", parameters).Result;
+        if (dialogResult.Data != null)
+        {
+            var newResult = (TaskResult) dialogResult.Data;
+            if (newResult.Result)
+            {
+                await GetAll();
+            }
+        }
+        
+        _isLoading = false;
+    }
+    
+    private async Task OpenDialogDelete(string id, string name)
+    {
+        _isLoading = true;
+        
+        var parameters = new DialogParameters
+        {
+            {"TaskResult", new TaskResult()},
+            {"Id", id},
+            {"Name", name}
+        };
+        
+        var dialogResult = await _dialogService.Show<DeletePreserveType>("Eliminar", parameters).Result;
+        if (dialogResult.Data != null)
+        {
+            var newResult = (TaskResult) dialogResult.Data;
+            if (newResult.Result)
+            {
+                await GetAll();
+            }
+        }
+        
+        _isLoading = false;
+    }
+
+}

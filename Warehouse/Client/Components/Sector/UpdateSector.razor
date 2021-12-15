@@ -1,0 +1,72 @@
+﻿@inject HttpClient _httpClient
+@inject ISnackbar _snackbar
+
+<EditForm Model="_sector" OnValidSubmit="Create">
+    <DataAnnotationsValidator/>
+    <MudDialog>
+        <DialogContent>
+            @if (_sector == null)
+            {
+                <LoadUpdate></LoadUpdate>
+            }
+            else
+            {
+                
+                <MudItem>
+                    <MudTextField Label="Nombre" HelperText="Max. 30 caracteres" Variant="Variant.Outlined"
+                                  @bind-Value="_sector.Name" For="@(() => _sector.Name)"/>
+                </MudItem>
+            }
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="Cancel" ButtonType="ButtonType.Button">Cancelar</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Warning">Editar</MudButton>
+        </DialogActions>
+    </MudDialog>
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
+    }
+</EditForm>
+
+@code {
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public TaskResult TaskResult { get; set; }
+    
+    [Parameter]
+    public string SectorId { get; set; }
+
+    private SectorViewModel _sector = new();
+    private bool _isLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _sector = await _httpClient.GetFromJsonAsync<SectorViewModel>($"api/sector/{SectorId}");
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Create()
+    {
+        _isLoading = true;
+
+        var httpResponse = await _httpClient.PutAsJsonAsync("api/sector", _sector);
+        if (httpResponse.StatusCode == HttpStatusCode.OK)
+        {
+            TaskResult.Result = true;
+            MudDialog.Close(DialogResult.Ok(TaskResult));
+            _snackbar.Add("😉 Sector creado exitosamente", Severity.Success);
+        }
+        else
+        {
+            _snackbar.Add("😥 Error al crear el sector", Severity.Error);
+        }
+
+        _isLoading = false;
+    }
+
+}

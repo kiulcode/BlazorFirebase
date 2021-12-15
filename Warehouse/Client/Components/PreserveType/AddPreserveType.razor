@@ -1,0 +1,56 @@
+﻿@inject HttpClient _httpClient
+@inject ISnackbar _snackbar
+
+<EditForm Model="_preserveType" OnValidSubmit="Create">
+    <DataAnnotationsValidator/>
+    <MudDialog>
+        <DialogContent>
+            <MudItem>
+                <MudTextField Label="Nombre" HelperText="Max. 30 caracteres" Variant="Variant.Outlined"
+                              @bind-Value="_preserveType.Name" For="@(() => _preserveType.Name)"/>
+            </MudItem>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="Cancel" ButtonType="ButtonType.Button">Cancelar</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">Guardar</MudButton>
+        </DialogActions>
+    </MudDialog>
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
+    }
+</EditForm>
+
+@code {
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public TaskResult TaskResult { get; set; }
+
+    private readonly PreserveTypeViewModel _preserveType = new();
+    private bool _isLoading;
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Create()
+    {
+        _isLoading = true;
+
+        var httpResponse = await _httpClient.PostAsJsonAsync("api/preserveType", _preserveType);
+        if (httpResponse.StatusCode == HttpStatusCode.OK)
+        {
+            TaskResult.Result = true;
+            MudDialog.Close(DialogResult.Ok(TaskResult));
+            _snackbar.Add("😉 Tipo de conserva creado exitosamente", Severity.Success);
+        }
+        else
+        {
+            _snackbar.Add("😥 Error al crear tipo de conserva", Severity.Error);
+        }
+
+        _isLoading = false;
+    }
+
+}

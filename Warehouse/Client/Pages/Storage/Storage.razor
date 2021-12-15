@@ -1,0 +1,127 @@
+﻿@page "/almacen/principal"
+@using Warehouse.Shared.Models
+@using Warehouse.Client.Components.Storage
+@inject HttpClient _httpClient
+@inject IDialogService _dialogService
+@inject ISnackbar _snackbar
+
+<MudButton @onclick="OpenDialogAdd" Variant="Variant.Filled" Color="Color.Primary" Class="mb-4">
+    Agregar
+</MudButton>
+@if (_storages == null)
+{
+    <LoadContent></LoadContent>
+}
+else
+{
+    <MudTable Items="_storages" Hover="true" Breakpoint="Breakpoint.Sm" 
+              Loading="@_isLoading" LoadingProgressColor="Color.Primary">
+        <HeaderContent>
+            <MudTh>ID</MudTh>
+            <MudTh>ID Producto</MudTh>
+            <MudTh>Stock entrante</MudTh>
+            <MudTh>Stock saliente</MudTh>
+            <MudTh>Stock existente</MudTh>
+            <MudTh>Fecha de ingreso</MudTh>
+            <MudTh>Fecha de actualización</MudTh>
+            <MudTh>Acciones</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="ID">@context.Id</MudTd>
+            <MudTd DataLabel="Producción">@context.ProductId</MudTd>
+            <MudTd DataLabel="Nombre">@context.StockIncoming</MudTd>
+            <MudTd DataLabel="Peso">@context.StockOutgoing</MudTd>
+            <MudTd DataLabel="Stock">@(context.StockIncoming - context.StockOutgoing)</MudTd>
+            <MudTd DataLabel="Fec. Expiración">@context.CreateTime</MudTd>
+            <MudTd DataLabel="Fec. Producción">@context.UpdateTime</MudTd>
+            <MudTd DataLabel="Acciones">
+                <MudIconButton OnClick="@(() => OpenDialogDelete(context.Id))"
+                               Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                               Color="Color.Error"/>
+                <MudIconButton OnClick="@(() => OpenDialogUpdate(context.Id))"
+                               Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                               Color="Color.Warning"/>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private IReadOnlyList<StorageModel> _storages;
+    private bool _isLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetAllStorages();
+    }
+
+    private async Task GetAllStorages()
+    {
+        _storages = await _httpClient.GetFromJsonAsync<IReadOnlyList<StorageModel>>("api/storage");
+    }
+
+    private async Task OpenDialogAdd()
+    {
+        _isLoading = true;
+        
+        var parameters = new DialogParameters
+        {
+            {"TaskResult", new TaskResult()}
+        };
+        var dialogResult = await _dialogService.Show<AddStorage>("Agregar", parameters).Result;
+        if (dialogResult.Data != null)
+        {
+            var newResult = (TaskResult) dialogResult.Data;
+            if (newResult.Result)
+            {
+                await GetAllStorages();
+            }
+        }
+        
+        _isLoading = false;
+    }
+
+    private async Task OpenDialogUpdate(string id)
+    {
+        _isLoading = true;
+        
+        var parameters = new DialogParameters
+        {
+            {"TaskResult", new TaskResult()},
+            {"StorageId", id}
+        };
+        var dialogResult = await _dialogService.Show<UpdateStorage>("Actualizar", parameters).Result;
+        if (dialogResult.Data != null)
+        {
+            var newResult = (TaskResult) dialogResult.Data;
+            if (newResult.Result)
+            {
+                await GetAllStorages();
+            }
+        }
+        
+        _isLoading = false;
+    }
+    
+    private async Task OpenDialogDelete(string id)
+    {
+        _isLoading = true;
+
+        var parameters = new DialogParameters
+        {
+            {"TaskResult", new TaskResult()},
+            {"StorageId", id}
+        };
+        var dialogResult = await _dialogService.Show<DeleteStorage>("Eliminar", parameters).Result;
+        if (dialogResult.Data != null)
+        {
+            var newResult = (TaskResult) dialogResult.Data;
+            if (newResult.Result)
+            {
+                await GetAllStorages();
+            }
+        }
+        
+        _isLoading = false;
+    }
+}

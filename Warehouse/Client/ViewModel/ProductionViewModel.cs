@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using Google.Cloud.Firestore;
 
 namespace Warehouse.Client.ViewModel
 {
