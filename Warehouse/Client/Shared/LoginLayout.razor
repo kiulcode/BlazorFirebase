@@ -1,19 +1,68 @@
 ﻿@inherits LayoutComponentBase
 
 
-<MudThemeProvider Theme="_currentTheme" />
-<MudSnackbarProvider />
+<MudThemeProvider Theme="_currentTheme"/>
+<MudSnackbarProvider/>
 
 <MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center" Style="height: 100vh;">
     <div class="d-flex flex-column mud-width-full">
         <MudPaper Elevation="25" Class="pa-8" Width="100%" MaxWidth="500px">
-            <MudIcon Icon="@Icons.Custom.Brands.MudBlazor" Size="Size.Large" Style="width:100px; height:100px;" />
+            <div class="d-flex justify-center">
+                <img src="images/fish-vestido.png" alt="Imagen de login">
+            </div>
             @Body
         </MudPaper>
-        <MudAlert Severity="Severity.Info" Class="mt-8 mud-width-full" Style="max-width:500px;" >No authentication is required, click sign in.</MudAlert>
     </div>
 </MudContainer>
 
 @code {
-    private MudTheme _currentTheme = new MudBlazorAdminDashboard();
+
+    protected override void OnInitialized()
+    {
+        _currentTheme = _darkTheme;
+        StateHasChanged();
+    }
+
+    void DarkMode()
+    {
+        _currentTheme = _currentTheme == _defaultTheme ? _darkTheme : _defaultTheme;
+    }
+
+    MudTheme _currentTheme = new();
+
+    MudTheme _defaultTheme = new()
+    {
+        Palette = new Palette
+        {
+            Black = "#272c34"
+        }
+    };
+
+    MudTheme _darkTheme = new()
+    {
+        Palette = new Palette()
+        {
+            Black = "#27272f",
+            Background = "#32333d",
+            BackgroundGrey = "#27272f",
+            Surface = "#373740",
+            DrawerBackground = "#27272f",
+            DrawerText = "rgba(255,255,255, 0.50)",
+            DrawerIcon = "rgba(255,255,255, 0.50)",
+            AppbarBackground = "#27272f",
+            AppbarText = "rgba(255,255,255, 0.70)",
+            TextPrimary = "rgba(255,255,255, 0.70)",
+            TextSecondary = "rgba(255,255,255, 0.50)",
+            ActionDefault = "#adadb1",
+            ActionDisabled = "rgba(255,255,255, 0.26)",
+            ActionDisabledBackground = "rgba(255,255,255, 0.12)",
+            Divider = "rgba(255,255,255, 0.12)",
+            DividerLight = "rgba(255,255,255, 0.06)",
+            TableLines = "rgba(255,255,255, 0.12)",
+            LinesDefault = "rgba(255,255,255, 0.12)",
+            LinesInputs = "rgba(255,255,255, 0.3)",
+            TextDisabled = "rgba(255,255,255, 0.2)"
+        }
+    };
+
 }

@@ -1,0 +1,58 @@
+﻿@page "/"
+@layout LoginLayout
+@inject NavigationManager _navigationManager
+@inject ISnackbar _snackbar
+
+<EditForm Model="_login" OnValidSubmit="LoginForm">
+    <DataAnnotationsValidator/>
+    
+    <MudText Typo="Typo.h4" GutterBottom="true">Inicia sesión</MudText>
+    
+    <MudTextField T="string" Label="Correo electrónico" Variant="Variant.Outlined" Class="my-6"
+                  @bind-Value="_login.Email" For="@(() => _login.Email)"/>
+    
+    <MudTextField Label="Contraseña" Variant="Variant.Outlined" InputType="@PasswordInput" Adornment="Adornment.End" 
+                  AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="TogglePasswordVisibility"
+                  @bind-Value="@_login.Password" For="@(() => _login.Password)"/>
+    
+    <MudButton ButtonType="ButtonType.Submit" Class="mt-6" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true">
+        Iniciar
+    </MudButton>
+</EditForm>
+
+@code {
+    private readonly LoginViewModel _login = new();
+
+    bool PasswordVisibility;
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    void TogglePasswordVisibility()
+    {
+    @if (PasswordVisibility)
+    {
+        PasswordVisibility = false;
+        PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+        PasswordInput = InputType.Password;
+    }
+    else
+    {
+        PasswordVisibility = true;
+        PasswordInputIcon = Icons.Material.Filled.Visibility;
+        PasswordInput = InputType.Text;
+    }
+    }
+
+    private void LoginForm()
+    {
+        @if (_login.Email == "admin@email.com" && _login.Password == "123")
+        {
+            _navigationManager.NavigateTo("materia-prima/tipo-insumo");
+        }
+        else
+        {
+            _snackbar.Add("😥 Usuario o contraseña incorrecto", Severity.Error);
+        }
+    }
+
+}

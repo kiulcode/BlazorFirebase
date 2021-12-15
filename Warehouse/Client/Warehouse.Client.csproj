@@ -24,6 +24,10 @@
     <_ContentIncludedByDefault Remove="Pages\Applications\Email\Email.razor" />
     <_ContentIncludedByDefault Remove="Pages\Applications\Email\EmailNavList.razor" />
     <_ContentIncludedByDefault Remove="Pages\Applications\Email\Inbox.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Personal\Account.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Personal\Dashboard.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Pages\Utility\Faq.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Pages\Utility\WasmLoading.razor" />
   </ItemGroup>
 
 </Project>
